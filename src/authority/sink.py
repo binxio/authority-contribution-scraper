@@ -59,4 +59,3 @@ if __name__ == "__main__":
         level=os.getenv("LOG_LEVEL", "INFO"), format="%(levelname)s: %(message)s"
     )
     sink = Sink()
-    sink.create_table_if_not_exists()

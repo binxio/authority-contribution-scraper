@@ -14,7 +14,7 @@ from authority.source import Source
 
 class BinxBlogSource(Source):
     def __init__(self, sink: Sink):
-        super(BinxBlogSource,self).__init__(sink)
+        super(BinxBlogSource, self).__init__(sink)
         self.count = 0
         self.name = "https://binx.io/blog"
 
@@ -45,7 +45,9 @@ if __name__ == "__main__":
         level=os.getenv("LOG_LEVEL", "INFO"), format="%(levelname)s: %(message)s"
     )
     sink = Sink()
-    sink.latest_entry = lambda unit, contribution: datetime.fromordinal(1).replace(tzinfo=pytz.utc)
+    sink.latest_entry = lambda unit, contribution: datetime.fromordinal(1).replace(
+        tzinfo=pytz.utc
+    )
     src = BinxBlogSource(sink)
     for c in src.feed():
         print(c)

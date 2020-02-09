@@ -12,8 +12,18 @@ Schema = [
     SchemaField("url", "STRING"),
 ]
 
+
 class Contribution(object):
-    def __init__(self, guid:str, author:str, date:datetime, title:str, unit:str, type:str, url:str=None):
+    def __init__(
+        self,
+        guid: str,
+        author: str,
+        date: datetime,
+        title: str,
+        unit: str,
+        type: str,
+        url: str = None,
+    ):
         self.guid: str = guid
         self.author: str = author
         self.date: datetime = date
@@ -28,7 +38,14 @@ class Contribution(object):
 
     @property
     def is_valid(self) -> bool:
-        if not self.guid and self.author and self.date and self.title and self.unit and self.type:
+        if (
+            not self.guid
+            and self.author
+            and self.date
+            and self.title
+            and self.unit
+            and self.type
+        ):
             return False
 
         if self.date.tzinfo != pytz.utc:
