@@ -32,7 +32,7 @@ def main():
     sink = Sink()
     sources = [s(sink) for s in AllSources]
     loader = Loader(sink, sources)
-    loader.run()
+    return loader.run()
 
 
 if __name__ == "__main__":
