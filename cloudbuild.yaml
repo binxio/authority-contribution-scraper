@@ -1,5 +1,24 @@
 steps:
-- name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-t', 'eu.gcr.io/$PROJECT_ID/authority-contribution-scraper:$SHORT_SHA', '.' ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args: 
+      - 'build'
+      - '-t'
+      - 'eu.gcr.io/$PROJECT_ID/authority-contribution-scraper:$SHORT_SHA'
+      - '.'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: 
+      - 'tag'
+      - 'eu.gcr.io/$PROJECT_ID/authority-contribution-scraper:$SHORT_SHA'
+      - 'eu.gcr.io/$PROJECT_ID/authority-contribution-scraper:latest'
+
+  - name: 'docker.io/hashicorp/terraform:0.12.18'
+    args: ['init']
+
+  - name: 'docker.io/hashicorp/terraform:0.12.18'
+    args: ['apply', '-var project=$PROJECT_ID', '-auto-approve']
+    timeout: 30m
+
 images:
 - 'eu.gcr.io/$PROJECT_ID/authority-contribution-scraper:$SHORT_SHA'
+- 'eu.gcr.io/$PROJECT_ID/authority-contribution-scraper:latest'
