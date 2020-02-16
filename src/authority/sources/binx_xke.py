@@ -26,13 +26,14 @@ class BinxXkeSource(Source):
             "reading new XKE sessions from https://xke.xebia.com/api/public since %s",
             latest,
         )
+        now = datetime.now().astimezone(pytz.utc)
         result = requests.get("https://xke.xebia.com/public/api/session/?unit=BINX")
         if result.status_code == 200:
             for session in result.json():
                 date = datetime_parse(session["start_time"]).astimezone(
                     pytz.timezone("Europe/Amsterdam")
                 )
-                if date > latest:
+                if date > latest and date < now:
                     presenters = map(
                         lambda p: p.strip(),
                         re.findall(r"[\w\s]+", session["presenter"]),
