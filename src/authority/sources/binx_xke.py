@@ -23,11 +23,11 @@ class BinxXkeSource(Source):
         self.count = 0
         latest = self.sink.latest_entry(unit="binx", contribution="xke")
         logging.info(
-            "reading new XKE sessions from https://xke.xebia.com/api/public since %s",
+            "reading new XKE sessions from https://xke-nxt.appspot.com/api/public since %s",
             latest,
         )
         now = datetime.now().astimezone(pytz.utc)
-        result = requests.get("https://xke.xebia.com/public/api/session/?unit=BINX")
+        result = requests.get("https://xke-nxt.appspot.com/public/api/session/?unit=BINX")
         if result.status_code == 200:
             for session in result.json():
                 date = datetime_parse(session["start_time"]).astimezone(

@@ -23,7 +23,7 @@ class BinxBlogSource(Source):
         latest = self.sink.latest_entry(unit="binx", contribution="blog")
         logging.info("reading new blogs from https://binx.io/blog since %s", latest)
         now = datetime.now().astimezone(pytz.utc)
-        feed = feedparser.parse("https://binx.io?feed=atom")
+        feed = feedparser.parse("https://binx.io/feed/atom")
         for entry in feed.entries:
             published_date = datetime_parse(entry["published"]).astimezone(pytz.utc)
             if published_date > latest and published_date < now:
