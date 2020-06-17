@@ -23,13 +23,13 @@ class BinxBlogSource(Source):
         latest = self.sink.latest_entry(unit="binx", contribution="blog")
         logging.info("reading new blogs from https://binx.io/blog since %s", latest)
         now = datetime.now().astimezone(pytz.utc)
-        feed = feedparser.parse("https://binx.io/blog/index.xml")
+        feed = feedparser.parse("https://binx.io?feed=atom")
         for entry in feed.entries:
             published_date = datetime_parse(entry["published"]).astimezone(pytz.utc)
             if published_date > latest and published_date < now:
                 for author in entry["authors"]:
                     contribution = Contribution(
-                        guid=entry["guid"],
+                        guid=entry["id"],
                         author=author["name"],
                         date=published_date,
                         title=entry["title"],
