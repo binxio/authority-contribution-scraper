@@ -34,7 +34,7 @@ class Sink(object):
             f'SELECT max(date) as latest FROM `authority.contributions` WHERE type="{contribution}" and unit = "{unit}"'
         )
         for r in job.result():
-            return r[0].astimezone(pytz.utc) if r[0] else last_entry
+            return r[0].replace(tzinfo=pytz.utc) if r[0] else last_entry
         return last_entry
 
     def load(self, contributions: Iterator[Contribution]):
