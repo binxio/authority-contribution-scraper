@@ -1,8 +1,8 @@
 
 resource "google_kms_key_ring" "terraform" {
-  name     = "terraform"
-  location = "europe"
-  project  = data.google_project.current.project_id
+  name       = "terraform"
+  location   = "europe"
+  project    = data.google_project.current.project_id
   depends_on = [google_project_service.cloudkms]
 }
 
@@ -17,9 +17,9 @@ data "google_kms_crypto_key_version" "terraform" {
 }
 
 resource "local_file" "encrypt_sh" {
-  filename = "encrypt.sh"
+  filename        = "encrypt.sh"
   file_permission = "0755"
-  content  = <<EOF
+  content         = <<EOF
 #!/bin/sh
 gcloud kms encrypt \
    --key ${trimprefix(data.google_kms_crypto_key_version.terraform.id, "//cloudkms.googleapis.com/v1/")} \
@@ -42,12 +42,12 @@ resource "google_secret_manager_secret" "xke_api_token" {
       }
     }
   }
-  project = data.google_project.current.project_id
+  project    = data.google_project.current.project_id
   depends_on = [google_project_service.secretmanager]
 }
 
 resource "google_secret_manager_secret_version" "xke_api_token" {
-  secret = google_secret_manager_secret.xke_api_token.id
+  secret      = google_secret_manager_secret.xke_api_token.id
   secret_data = data.google_kms_secret.xke_api_token.plaintext
 }
 
@@ -56,3 +56,12 @@ data "google_kms_secret" "xke_api_token" {
   ciphertext = "CiQAQ881WqBCvyOOxWMAIdlb9K7OxRT0cKAAvHoaAQKMep/x89ESUQBOAh2qphxJcHbV95EsUDEJuUD/Wki6GY21QuewAZX+1gdlJB7nNaIuZBrvGOQWBC/otx45DCADLKIqruQitrYvxgbVI67P05zWbYH1nDIn9w=="
 }
 
+
+resource "google_secret_manager_secret_iam_binding" "xke_api_token_accessor" {
+  secret_id = google_secret_manager_secret.xke_api_token.id
+  role      = "roles/secretmanager.secretAccessor"
+  members = [
+    format("serviceAccount:%s", google_service_account.authority-contribution-scraper.email)
+  ]
+  project = data.google_project.current.project_id
+}
