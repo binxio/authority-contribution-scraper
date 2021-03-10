@@ -4,35 +4,39 @@ import os, re
 from datetime import datetime
 from typing import Iterator
 
-import feedparser
 import pytz
 from dateutil.parser import parse as datetime_parse
 
 from authority.contribution import Contribution
 from authority.sink import Sink
 from authority.source import Source
+from authority.secret import get_token
 
 
 class BinxXkeSource(Source):
     def __init__(self, sink: Sink):
         super(BinxXkeSource, self).__init__(sink)
         self.count = 0
+        self.headers = {"Authorization": get_token()}
         self.name = "https://xke.xebia.com/api/public"
 
     def feed(self) -> Iterator[Contribution]:
         self.count = 0
         latest = self.sink.latest_entry(unit="binx", contribution="xke")
         logging.info(
-            "reading new XKE sessions from https://xke-nxt.appspot.com/api/public since %s",
+            "reading new XKE sessions from https://xke-nxt.appspot.com/api/ since %s",
             latest,
         )
         now = datetime.now().astimezone(pytz.utc)
-        result = requests.get("https://xke-nxt.appspot.com/public/api/session/?unit=BINX")
+        result = requests.get("https://xke-nxt.appspot.com/api/session/?unit=BINX")
         if result.status_code == 200:
             for session in result.json():
+                print(f"{session['start_time']} - {session['title']}")
+
                 date = datetime_parse(session["start_time"]).astimezone(
                     pytz.timezone("Europe/Amsterdam")
                 )
+
                 if date > latest and date < now:
                     presenters = map(
                         lambda p: p.strip(),

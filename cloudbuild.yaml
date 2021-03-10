@@ -13,11 +13,11 @@ steps:
       - 'eu.gcr.io/$PROJECT_ID/authority-contribution-scraper:$SHORT_SHA'
       - 'eu.gcr.io/$PROJECT_ID/authority-contribution-scraper:latest'
 
-  - name: 'docker.io/hashicorp/terraform:0.12.18'
+  - name: 'docker.io/hashicorp/terraform:0.13.6'
     dir: ./terraform
     args: ['init']
 
-  - name: 'docker.io/hashicorp/terraform:0.12.18'
+  - name: 'docker.io/hashicorp/terraform:0.13.6'
     args: ['apply', '-var', 'project=$PROJECT_ID', '-auto-approve']
     dir: ./terraform
     timeout: 1800s

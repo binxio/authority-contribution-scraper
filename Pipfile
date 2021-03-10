@@ -12,6 +12,7 @@ feedparser = "*"
 python-dateutil = "*"
 flask = "*"
 pytz = "*"
+google-cloud-secret-manager = "*"
 
 [requires]
 python_version = "3.7"
