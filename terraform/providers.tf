@@ -1,9 +1,9 @@
 terraform {
   required_version = ">= 0.12"
-    backend "gcs" {
-      bucket = "binxio-mgmt-terraform-state"
-      prefix = "authority"
-   }
+  backend "gcs" {
+    bucket = "binxio-mgmt-terraform-state"
+    prefix = "authority"
+  }
 }
 
 provider "google" {
