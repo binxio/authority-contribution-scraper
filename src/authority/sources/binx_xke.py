@@ -31,7 +31,9 @@ class BinxXkeSource(Source):
         result = requests.get("https://xke-nxt.appspot.com/api/session/?unit=BINX")
         if result.status_code == 200:
             for session in result.json():
-                date = datetime_parse(session["start_time"]).astimezone(
+                xke_date = session["xke"].rstrip("/").split("/")[-1]
+                start_time = f"{xke_date}T{session['start_time']}"
+                date = datetime_parse(start_time).astimezone(
                     pytz.timezone("Europe/Amsterdam")
                 )
 
