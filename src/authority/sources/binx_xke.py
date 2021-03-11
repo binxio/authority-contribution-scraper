@@ -11,6 +11,15 @@ from authority.contribution import Contribution
 from authority.sink import Sink
 from authority.source import Source
 from authority.secret import get_token
+from typing import List
+
+
+def split_presenters(p:str) -> List[str]:
+    p = re.sub(r"\.", "", p)        # remove dots from names
+    p = re.sub(r"\([^)]*\)", "", p)  # remove stuff between brackets
+    p = re.sub(r" vd ", " van de ", p)  # especially for Martijn :-)
+    result = list(filter(lambda s : s, map(lambda s : s.strip(), re.split(r"- | -|,|\&+|/| en | and ", p))))
+    return result if result else [p]
 
 
 class BinxXkeSource(Source):
@@ -38,11 +47,7 @@ class BinxXkeSource(Source):
                 )
 
                 if date > latest and date < now:
-                    presenters = map(
-                        lambda p: p.strip(),
-                        re.findall(r"[\w\s]+", session["presenter"]),
-                    )
-                    for presenter in presenters:
+                    for presenter in split_presenters(session["presenter"]):
                         url = (
                             f"https://xke.xebia.com/event/{date.date()}/{session['id']}"
                         )
