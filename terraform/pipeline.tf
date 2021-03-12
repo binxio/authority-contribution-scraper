@@ -1,5 +1,5 @@
-resource "google_cloudbuild_trigger" "cicd" {
-  name = "cicd-deploy"
+resource "google_cloudbuild_trigger" "push" {
+  name = "push-authority-contribution-scraper"
   github {
     owner = "binxio"
     name  = "authority-contribution-scraper"
@@ -11,6 +11,21 @@ resource "google_cloudbuild_trigger" "cicd" {
   project  = data.google_project.current.project_id
   provider = google-beta
 }
+
+resource "google_cloudbuild_trigger" "tag" {
+  name = "tag-authority-contribution-scraper"
+  github {
+    owner = "binxio"
+    name  = "authority-contribution-scraper"
+    push {
+      tag = ".*"
+    }
+  }
+  filename = "cloudbuild.yaml"
+  project  = data.google_project.current.project_id
+  provider = google-beta
+}
+
 
 resource "google_project_iam_member" "cloudbuild-editor" {
   role       = "roles/owner"
