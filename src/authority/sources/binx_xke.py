@@ -10,7 +10,6 @@ from dateutil.parser import parse as datetime_parse
 from authority.contribution import Contribution
 from authority.sink import Sink
 from authority.source import Source
-from authority.secret import get_token
 from typing import List
 
 
@@ -26,7 +25,6 @@ class BinxXkeSource(Source):
     def __init__(self, sink: Sink):
         super(BinxXkeSource, self).__init__(sink)
         self.count = 0
-        self.headers = {"Authorization": get_token()}
         self.name = "https://xke.xebia.com/api/public"
 
     def feed(self) -> Iterator[Contribution]:
