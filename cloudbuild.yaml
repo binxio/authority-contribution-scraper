@@ -16,4 +16,4 @@ images:
   - '${_IMAGE}'
 
 substitutions:
-  _IMAGE: 'gcr.io/${PROJECT_ID}/${REPO_NAME}:${TAG_NAME:-${SHORT_SHA}}'
+  _IMAGE: 'eu.gcr.io/${PROJECT_ID}/${REPO_NAME}:${TAG_NAME:-${SHORT_SHA}}'
