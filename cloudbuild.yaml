@@ -1,14 +1,18 @@
 timeout: 2400s
+options:
+  env:
+   - TF_VAR_project=${PROJECT_ID}
+
 steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', '${_IMAGE}', '.']
 
   - name: 'docker.io/hashicorp/terraform:1.0.11'
-    dir: ./terraform
     args: ['init']
+    dir: ./terraform
 
   - name: 'docker.io/hashicorp/terraform:1.0.11'
-    args: ['apply', '-var', 'project=$PROJECT_ID', '-auto-approve']
+    args: ['apply', '-auto-approve']
     dir: ./terraform
     timeout: 1800s
 
