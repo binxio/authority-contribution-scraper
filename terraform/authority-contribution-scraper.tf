@@ -17,6 +17,7 @@ resource "google_cloud_run_service" "authority-contribution-scraper" {
   timeouts {
     create = "10m"
   }
+  autogenerate_revision_name = true
 }
 
 resource "google_service_account" "authority-contribution-scraper-invoker" {
@@ -41,7 +42,7 @@ resource "google_cloud_scheduler_job" "authority-contribution-scraper" {
 
   http_target {
     http_method = "GET"
-    uri         = google_cloud_run_service.authority-contribution-scraper.status[0].url
+    uri         = format("%s/", google_cloud_run_service.authority-contribution-scraper.status[0].url)
     oidc_token {
       service_account_email = google_service_account.authority-contribution-scraper-invoker.email
     }
