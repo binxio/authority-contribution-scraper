@@ -24,6 +24,6 @@ resource "google_storage_bucket" "terraform_state" {
   versioning {
     enabled = true
   }
-  project = data.google_project.current.project_id
+  project  = data.google_project.current.project_id
+  location = "US"
 }
-
