@@ -7,14 +7,14 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', '${_IMAGE}', '.']
 
-  - name: 'docker.io/hashicorp/terraform:1.0.11'
-    args: ['init']
-    dir: ./terraform
-
-  - name: 'docker.io/hashicorp/terraform:1.0.11'
-    args: ['apply', '-auto-approve']
-    dir: ./terraform
-    timeout: 1800s
+#  - name: 'docker.io/hashicorp/terraform:1.0.11'
+#    args: ['init']
+#    dir: ./terraform
+#
+#  - name: 'docker.io/hashicorp/terraform:1.0.11'
+#    args: ['apply', '-auto-approve']
+#    dir: ./terraform
+#    timeout: 1800s
 
 images:
   - '${_IMAGE}'
