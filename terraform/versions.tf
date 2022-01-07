@@ -6,6 +6,9 @@ terraform {
     google-beta = {
       source = "hashicorp/google-beta"
     }
+    local = {
+      source = "hashicorp/local"
+    }
   }
-  required_version = ">= 0.13"
+  required_version = ">= 1.0.11"
 }

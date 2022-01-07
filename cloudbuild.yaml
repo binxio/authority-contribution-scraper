@@ -3,11 +3,11 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', '${_IMAGE}', '.']
 
-  - name: 'docker.io/hashicorp/terraform:0.13.6'
+  - name: 'docker.io/hashicorp/terraform:1.0.11'
     dir: ./terraform
     args: ['init']
 
-  - name: 'docker.io/hashicorp/terraform:0.13.6'
+  - name: 'docker.io/hashicorp/terraform:1.0.11'
     args: ['apply', '-var', 'project=$PROJECT_ID', '-auto-approve']
     dir: ./terraform
     timeout: 1800s
