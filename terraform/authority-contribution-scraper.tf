@@ -25,8 +25,9 @@ resource "google_service_account" "authority-contribution-scraper-invoker" {
 }
 
 resource "google_project_iam_member" "authority-contribution-scraper-invoker" {
-  role   = "roles/run.invoker"
-  member = "serviceAccount:${google_service_account.authority-contribution-scraper-invoker.email}"
+  role    = "roles/run.invoker"
+  member  = "serviceAccount:${google_service_account.authority-contribution-scraper-invoker.email}"
+  project = var.project
 }
 
 
