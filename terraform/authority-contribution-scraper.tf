@@ -7,7 +7,7 @@ resource "google_cloud_run_service" "authority-contribution-scraper" {
       container_concurrency = 1
       service_account_name  = google_service_account.authority-contribution-scraper.email
       containers {
-        image = "eu.gcr.io/binxio-mgmt/authority-contribution-scraper:0.1.2"
+        image = "eu.gcr.io/binxio-mgmt/authority-contribution-scraper:0.1.3"
       }
     }
   }
@@ -49,7 +49,7 @@ resource "google_cloud_scheduler_job" "authority-contribution-scraper" {
 }
 
 resource "google_service_account" "authority-contribution-scraper" {
-  display_name = "Image reference updater"
+  display_name = "binx.io authority contribution scraper"
   account_id   = "authority-contribution-scraper"
   project      = data.google_project.current.project_id
 }
