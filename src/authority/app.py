@@ -2,10 +2,16 @@ import os
 import logging
 from flask import jsonify
 from authority import loader
+from authority.report import Report
+from io import BytesIO
+from flask_caching import Cache
+from flask import Flask, send_file
 
-from flask import Flask
+cache = Cache(config={"CACHE_TYPE": "SimpleCache"})
 
 app = Flask(__name__)
+cache.init_app(app)
+
 logging.basicConfig(
     level=os.getenv("LOG_LEVEL", "INFO"), format="%(levelname)s: %(message)s"
 )
@@ -14,6 +20,16 @@ logging.basicConfig(
 @app.route("/")
 def run():
     return jsonify(loader.main())
+
+
+@app.route("/graph/contributions-per-month")
+@cache.cached(timeout=3600)
+def contributions_per_month():
+    image = BytesIO()
+    reporter = Report()
+    reporter.get_contributions_per_month(image)
+    image.seek(0)
+    return send_file(image, mimetype="image/png")
 
 
 if __name__ == "__main__":

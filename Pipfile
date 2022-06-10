@@ -12,9 +12,11 @@ google-cloud-bigquery = "*"
 feedparser = "*"
 python-dateutil = "*"
 flask = "*"
+"flask-caching" = "*"
 pytz = "*"
 google-cloud-secret-manager = "*"
 google-cloud-firestore = "*"
+matplotlib = "*"
 
 [requires]
 python_version = "3.9"

@@ -1,8 +1,7 @@
+/.idea/
 .pytest_cache/
 *.iml
 tests/.pytest_cache/
-.idea/workspace.xml
-.idea/tasks.xml
 .noseids
 *.zip
 deps/
