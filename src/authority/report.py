@@ -23,6 +23,9 @@ class Report(object):
             blogs.append(row.get("blog"))
             xkes.append(row.get("xke"))
 
+        blogs = list(map(lambda c: c if c else 0, blogs))
+        xkes = list(map(lambda c: c if c else 0, xkes))
+
         x_axis = numpy.arange(len(x_labels))
         pyplot.bar(x_axis - 0.2, blogs, 0.4, label="Blogs")
         pyplot.bar(x_axis + 0.2, xkes, 0.4, label="XKEs")
