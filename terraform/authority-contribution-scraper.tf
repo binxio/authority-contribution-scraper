@@ -3,11 +3,16 @@ resource "google_cloud_run_service" "authority-contribution-scraper" {
   location = "europe-west4"
 
   template {
+    metadata {
+      annotations = {
+        "autoscaling.knative.dev/maxScale" = 1
+      }
+    }
     spec {
       container_concurrency = 1
       service_account_name  = google_service_account.authority-contribution-scraper.email
       containers {
-        image = "eu.gcr.io/binxio-mgmt/authority-contribution-scraper:0.3.0"
+        image = "eu.gcr.io/binxio-mgmt/authority-contribution-scraper:0.3.1"
       }
     }
   }
@@ -25,9 +30,13 @@ resource "google_service_account" "authority-contribution-scraper-invoker" {
   display_name = "Authority Contribution scraper invoker"
 }
 
-resource "google_project_iam_member" "authority-contribution-scraper-invoker" {
+resource "google_project_iam_member" "authority-contribution-scraper-run-invoker" {
+  for_each = toset([
+    "domain:binx.io",
+    "serviceAccount:${google_service_account.authority-contribution-scraper-invoker.email}",
+  ])
   role    = "roles/run.invoker"
-  member  = "serviceAccount:${google_service_account.authority-contribution-scraper-invoker.email}"
+  member  = each.value
   project = var.project
 }
 
@@ -42,7 +51,7 @@ resource "google_cloud_scheduler_job" "authority-contribution-scraper" {
 
   http_target {
     http_method = "GET"
-    uri         = format("%s/", google_cloud_run_service.authority-contribution-scraper.status[0].url)
+    uri         = format("%s/scrape", google_cloud_run_service.authority-contribution-scraper.status[0].url)
     oidc_token {
       service_account_email = google_service_account.authority-contribution-scraper-invoker.email
     }
