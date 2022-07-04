@@ -17,14 +17,21 @@ logging.basicConfig(
 )
 
 
-@app.route("/")
-def run():
+@app.route("/scrape")
+def scrape():
+    """
+    Authority contributions from authoritative sources (blog, XKE app) and store the
+    results in BigQuery.
+    """
     return jsonify(loader.main())
 
 
 @app.route("/graph/contributions-per-month")
 @cache.cached(timeout=3600)
 def contributions_per_month():
+    """
+    generates a graph of the number of contributions per month in this calendar year.
+    """
     image = BytesIO()
     reporter = Report()
     reporter.get_contributions_per_month(image)
