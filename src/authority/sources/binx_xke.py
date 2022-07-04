@@ -98,16 +98,15 @@ class BinxXkeSource(Source):
 
         for event in events.stream():
             contributions: List[Contribution] = []
-            for session_type in ["sessions-public", "sessions-private"]:
-                for session in (
-                    self.db.collection("events")
-                    .document(event.id)
-                    .collection(session_type)
-                    .where("unit.id", "==", "BINX")
-                    .stream()
-                ):
-                    for contribution in create_from_document(event, session):
-                        contributions.append(contribution)
+            for session in (
+                self.db.collection("events")
+                .document(event.id)
+                .collection("sessions-public")
+                .where("unit.id", "==", "BINX")
+                .stream()
+            ):
+                for contribution in create_from_document(event, session):
+                    contributions.append(contribution)
 
             contributions.sort(key=lambda x: x.date)
 
