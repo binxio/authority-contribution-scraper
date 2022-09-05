@@ -35,6 +35,11 @@ class Report(object):
         pyplot.savefig(stream, format="png")
         pyplot.close()
 
+    def print_authors(self):
+        job: QueryJob = self.client.query(_authors)
+        for row in job.result():
+            print(f'{row.get("author")} - {row.get("aantal")}')
+
 
 _contributions_per_month = """
                select *
@@ -51,6 +56,15 @@ _contributions_per_month = """
                order by maand asc
        """
 
+_authors = """
+               select  author, count(distinct guid) as aantal,
+               from `binxio-mgmt.authority.contributions`
+               where datetime_trunc(date, year) = datetime_trunc("2022-01-01",year)
+               group by author
+               order by aantal desc
+       """
+
+
 if __name__ == "__main__":
     logging.basicConfig(
         level=os.getenv("LOG_LEVEL", "INFO"), format="%(levelname)s: %(message)s"
@@ -59,3 +73,4 @@ if __name__ == "__main__":
     with NamedTemporaryFile(suffix=".png", delete=False) as filename:
         reporter.get_contributions_per_month(filename.file)
         print(filename.name)
+    reporter.print_authors()
