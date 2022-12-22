@@ -45,7 +45,7 @@ class GithubPullRequests(Source):
                 rate_limit = response.headers.get("X-RateLimit-Remaining")
                 if rate_limit == "0":
                     reset_time = response.headers.get("X-RateLimit-Reset")
-                    wait_time = int(int(reset_time) - time())
+                    wait_time = int(int(reset_time) - time()) + 1
                     if wait_time:
                         logging.info("rate limited, sleeping %s seconds", wait_time)
                         sleep(wait_time)
@@ -75,6 +75,9 @@ class GithubPullRequests(Source):
     @functools.cache
     def get_user_info(self, username: dict) -> dict:
         response, _ = self.get_rate_limited(f"https://api.github.com/users/{username}")
+        if not response.get("name"):
+            logging.info("no user name for %s", username)
+
         return response
 
     def feed(self) -> Iterator[Contribution]:
@@ -100,6 +103,7 @@ class GithubPullRequests(Source):
                     "https://api.github.com/search/issues", params={"q": query}
                 ):
                     user = self.get_user_info(member["login"])
+
                     for pr in prs["items"]:
                         url = urlparse(pr["url"])
                         if url.path.startswith(f"/repos/{member['login']}"):

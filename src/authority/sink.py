@@ -49,9 +49,7 @@ class Sink(object):
                 table=self.table, rows=map(lambda c: c.as_tuple, contributions)
             )
             if result:
-                logging.error(
-                    "failed to add %s new contributions", len(result), self.count
-                )
+                logging.error("failed to add new contributions")
                 logging.error("%s", "\n".join(result))
                 exit(1)
 
