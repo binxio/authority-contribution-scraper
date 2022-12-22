@@ -1,3 +1,3 @@
-from authority.sources import BinxXkeSource, BinxBlogSource
+from authority.sources import BinxXkeSource, BinxBlogSource, GithubPullRequests
 
-AllSources = [BinxXkeSource, BinxBlogSource]
+AllSources = [BinxXkeSource, BinxBlogSource, GithubPullRequests]

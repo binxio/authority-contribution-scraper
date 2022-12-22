@@ -4,15 +4,21 @@ from datetime import datetime
 from typing import Iterator
 
 import pytz
+import google
 from google.cloud import bigquery, exceptions
 from google.cloud.bigquery.job import QueryJob
 
+import gcloud_config_helper
 from authority.contribution import Contribution, Schema
 
 
 class Sink(object):
     def __init__(self):
-        self.client = bigquery.Client()
+        if gcloud_config_helper.on_path():
+            credentials, project = gcloud_config_helper.default()
+        else:
+            credentials, project = google.auth.default()
+        self.client = bigquery.Client(credentials=credentials, project=project)
         self.create_table_if_not_exists()
 
     def create_table_if_not_exists(self):

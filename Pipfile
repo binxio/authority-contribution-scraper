@@ -16,7 +16,10 @@ flask = "*"
 pytz = "*"
 google-cloud-secret-manager = "*"
 google-cloud-firestore = "*"
-matplotlib = "*"
+gcloud-config-helper = "*"
+matplotlib = "==3.5.2"
+requests = "*"
+requests-utils = "*"
 
 [requires]
 python_version = "3.9"

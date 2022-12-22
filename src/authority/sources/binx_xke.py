@@ -5,6 +5,8 @@ from datetime import datetime
 from typing import Iterator, List
 
 import pytz
+import google
+import gcloud_config_helper
 from google.cloud import firestore
 from authority.contribution import Contribution
 from authority.sink import Sink
@@ -74,7 +76,12 @@ class BinxXkeSource(Source):
         super(BinxXkeSource, self).__init__(sink)
         self.count = 0
         self.name = "firestore"
-        self.db = firestore.Client(project="xke-nxt")
+        if gcloud_config_helper.on_path():
+            credentials, _ = gcloud_config_helper.default()
+        else:
+            logging.info("using application default credentials")
+            credentials, _ = google.auth.default()
+        self.db = firestore.Client(credentials=credentials, project="xke-nxt")
 
     def feed(self) -> Iterator[Contribution]:
         self.count = 0
