@@ -17,6 +17,7 @@ class BinxBlogSource(Source):
     def __init__(self, sink: Sink):
         super(BinxBlogSource, self).__init__(sink)
         self.count = 0
+        self.name = "binx.io"
         self.users: dict[int, str] = {}
 
     def get_user(self, user_id: int):

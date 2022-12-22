@@ -84,3 +84,25 @@ resource "google_project_iam_member" "cloudscheduler_iam_service_account_user" {
   depends_on = [google_project_service.cloudscheduler]
 }
 
+
+resource "google_secret_manager_secret" "authority-scraper" {
+  for_each  = toset(["github-api-token"])
+  secret_id = each.value
+  replication {
+    user_managed {
+      replicas {
+        location = var.region
+      }
+      replicas {
+        location = var.replica_region
+      }
+    }
+  }
+}
+
+resource "google_secret_manager_secret_iam_member" "authority-scraper" {
+  for_each  = google_secret_manager_secret.authority-scraper
+  member    = format("serviceAccount:%s", google_service_account.authority-contribution-scraper.email)
+  role      = "roles/secretmanager.secretAccessor"
+  secret_id = each.value.secret_id
+}

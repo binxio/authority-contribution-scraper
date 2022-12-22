@@ -12,6 +12,7 @@ import functools
 from authority.contribution import Contribution
 from authority.sink import Sink
 from authority.source import Source
+from authority.google_secrets import SecretManager
 
 
 class GithubPullRequests(Source):
@@ -20,8 +21,19 @@ class GithubPullRequests(Source):
         self.count = 0
         self.name = "github-pull-requests"
         self.session = requests.Session()
+        self.token = os.getenv(
+            "GITHUB_API_TOKEN",
+            SecretManager.get_instance().get_secret("github-api-token"),
+        )
+
+    def add_authorization(self, kwargs):
+        if self.token:
+            headers = kwargs.pop("headers", {})
+            headers["Authorization"] = f"Token {self.token}"
+            kwargs["headers"] = headers
 
     def get_rate_limited(self, url, **kwargs) -> (dict, dict):
+        self.add_authorization(kwargs)
         while True:
             response = self.session.get(url, **kwargs)
             if response.status_code == 200:
@@ -66,8 +78,8 @@ class GithubPullRequests(Source):
     def feed(self) -> Iterator[Contribution]:
         self.count = 0
         latest = self.sink.latest_entry(unit="binx", contribution="github-pr").date()
-        if latest < date(year=1970, month=1, day=1):
-            latest = date(year=1970, month=1, day=1)
+        if latest < date(year=2018, month=1, day=1):
+            latest = date(year=2018, month=1, day=1)
 
         for org_members in self.get_paginated(
             "https://api.github.com/orgs/binxio/members"
