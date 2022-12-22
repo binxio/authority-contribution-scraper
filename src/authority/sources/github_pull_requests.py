@@ -23,7 +23,9 @@ class GithubPullRequests(Source):
         self.session = requests.Session()
         self.token = os.getenv(
             "GITHUB_API_TOKEN",
-            SecretManager.get_instance().get_secret("github-api-token"),
+            SecretManager.get_instance().get_secret(
+                "authority-contribution-scraper-github-api-token"
+            ),
         )
 
     def add_authorization(self, kwargs):

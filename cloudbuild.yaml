@@ -1,5 +1,6 @@
 timeout: 2400s
 options:
+  substitution_option: 'ALLOW_LOOSE'
   env:
    - TF_VAR_project=${PROJECT_ID}
 

@@ -19,7 +19,6 @@ google-cloud-firestore = "*"
 gcloud-config-helper = "*"
 matplotlib = "==3.5.2"
 requests = "*"
-requests-utils = "*"
 
 [requires]
 python_version = "3.9"

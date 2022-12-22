@@ -65,9 +65,7 @@ class SecretManager:
             logging.info("using application default credentials")
             self.credentials, self.project_id = google.auth.default()
 
-        self.client = SecretManagerServiceClient(
-            credentials=self.credentials, project=self.project_id
-        )
+        self.client = SecretManagerServiceClient(credentials=self.credentials)
 
     def get_secret(self, name: str):
         """

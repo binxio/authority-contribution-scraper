@@ -4,7 +4,7 @@ ENV APP_HOME /app
 WORKDIR $APP_HOME
 
 COPY Pipfile ./
-RUN pip install $(sed -n -e '/^\[packages\]/,/^\[/p' Pipfile |sed -e '/^\[/d' -e 's/ = .*//' -e '/^$/d')
+RUN pip install $(sed -n -e '/^\[packages\]/,/^\[/p' Pipfile |sed -e '/^\[/d' -e 's/ = .*//' -e '/^$/d' -e 's/"//g')
 
 COPY src ./
 

@@ -12,7 +12,7 @@ resource "google_cloud_run_service" "authority-contribution-scraper" {
       container_concurrency = 1
       service_account_name  = google_service_account.authority-contribution-scraper.email
       containers {
-        image = "eu.gcr.io/binxio-mgmt/authority-contribution-scraper:0.3.1"
+        image = "eu.gcr.io/binxio-mgmt/authority-contribution-scraper:lates"
       }
     }
   }
@@ -86,7 +86,7 @@ resource "google_project_iam_member" "cloudscheduler_iam_service_account_user" {
 
 
 resource "google_secret_manager_secret" "authority-scraper" {
-  for_each  = toset(["github-api-token"])
+  for_each  = toset(["authority-contribution-scraper-github-api-token"])
   secret_id = each.value
   replication {
     user_managed {
