@@ -37,6 +37,7 @@ class Report(object):
         pull_requests = list(map(lambda c: c if c else 0, pull_requests))
 
         x_axis = numpy.arange(len(x_labels))
+        pyplot.rcParams["figure.figsize"] = (10, 5)
         pyplot.bar(x_axis - 0.2, blogs, 0.4, label="Blogs")
         pyplot.bar(x_axis + 0.2, xkes, 0.4, label="XKEs")
         pyplot.bar(x_axis + 0.4, pull_requests, 0.4, label="Github PRs")
