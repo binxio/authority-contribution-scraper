@@ -31,6 +31,7 @@ class Loader(object):
 def main():
     sink = Sink()
     sources = [s(sink) for s in AllSources]
+
     loader = Loader(sink, sources)
     return loader.run()
 

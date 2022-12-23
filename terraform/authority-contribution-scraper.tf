@@ -65,18 +65,6 @@ resource "google_service_account" "authority-contribution-scraper" {
   project      = data.google_project.current.project_id
 }
 
-resource "google_project_iam_member" "authority-contribution-scraper-bigquery-dataEditor" {
-  project = data.google_project.current.project_id
-  role    = "roles/bigquery.dataEditor"
-  member  = "serviceAccount:${google_service_account.authority-contribution-scraper.email}"
-}
-
-resource "google_project_iam_member" "authority-contribution-scraper-bigquery-jobUser" {
-  project = data.google_project.current.project_id
-  role    = "roles/bigquery.jobUser"
-  member  = "serviceAccount:${google_service_account.authority-contribution-scraper.email}"
-}
-
 resource "google_project_iam_member" "cloudscheduler_iam_service_account_user" {
   project    = data.google_project.current.project_id
   role       = "roles/iam.serviceAccountUser"
