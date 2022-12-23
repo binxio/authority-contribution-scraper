@@ -4,6 +4,7 @@ from datetime import datetime, date
 from time import time, sleep
 from typing import Iterator, Optional
 from urllib.parse import urlparse
+from copy import deepcopy
 
 import pytz
 import requests
@@ -72,13 +73,14 @@ class GithubPullRequests(Source):
             yield response
             next_url = self.get_next_link(headers)
 
-    @functools.cache
-    def get_user_info(self, username: dict) -> dict:
+    @functools.lru_cache(maxsize=0, typed=True)
+    def get_user_info(self, username: str) -> dict:
         response, _ = self.get_rate_limited(f"https://api.github.com/users/{username}")
         if not response.get("name"):
             logging.info("no user name for %s", username)
+            response["name"] = username
 
-        return response
+        return deepcopy(response)
 
     def feed(self) -> Iterator[Contribution]:
         self.count = 0
