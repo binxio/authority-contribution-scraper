@@ -33,7 +33,7 @@ resource "google_cloudbuild_trigger" "terraform-apply" {
     owner = "binxio"
     name  = "authority-contribution-scraper"
     push {
-      tag = ".*"
+      branch = "main"
     }
   }
   included_files = ["terraform/**"]
