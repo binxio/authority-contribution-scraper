@@ -111,3 +111,4 @@ ENV/
 .terraform/
 terraform.tfstate*
 
+.git/

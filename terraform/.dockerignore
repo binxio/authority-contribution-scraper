@@ -1,0 +1,7 @@
+public-key.pem
+encrypt.sh
+.terraform
+*.tfstate
+*.backup
+.out
+*.auto.tfvars

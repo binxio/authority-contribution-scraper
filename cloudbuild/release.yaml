@@ -1,0 +1,56 @@
+---
+timeout: 2400s
+options:
+  env:
+    - TF_VAR_project=${PROJECT_ID}
+
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '${_IMAGE}', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_IMAGE}']
+
+  - name: gcr.io/cloud-builders/gcloud
+    entrypoint: 'bash'
+    args:
+      - -c
+      - |
+        mkdir -p /root/.ssh
+        cat > /root/.ssh/known_hosts <<!
+        github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
+        github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==
+        github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+        !
+        cat > /root/.ssh/config <<!
+        Host github.com
+          User git
+          StrictHostKeyChecking no
+          PasswordAuthentication no
+          IdentityFile /root/.ssh/id_rsa
+          IdentitiesOnly yes
+          LogLevel ERROR
+        !
+        touch /root/.ssh/id_rsa
+        chmod 0600 /root/.ssh/id_rsa
+        gcloud secrets versions access latest --secret=cloudbuild-private-key > /root/.ssh/id_rsa
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+
+  - name: ghcr.io/binxio/cru:1.0.0
+    env:
+      - HOME=/root
+    args: [
+      'update',
+      '--repository', '${_GIT_REPOSITORY_URL}',
+      '--image-reference', '${_IMAGE}',
+      'terraform/'
+    ]
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+
+substitutions:
+  _IMAGE: 'eu.gcr.io/${PROJECT_ID}/${REPO_NAME}:${TAG_NAME:-${SHORT_SHA}}'
+  _GIT_REPOSITORY_URL: git@github.com:binxio/authority-contribution-scraper.git
