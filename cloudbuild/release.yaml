@@ -43,8 +43,10 @@ steps:
       - HOME=/root
     args: [
       'update',
+      '--verbose',
       '--repository', '${_GIT_REPOSITORY_URL}',
       '--image-reference', '${_IMAGE}',
+      '--commit', 'release ${_IMAGE}',
       'terraform/'
     ]
     volumes:
