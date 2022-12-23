@@ -7,9 +7,10 @@ resource "google_cloudbuild_trigger" "push" {
       branch = "main"
     }
   }
-  filename = "cloudbuild.yaml"
-  project  = data.google_project.current.project_id
-  provider = google-beta
+  ignored_files = ["terraform/**"]
+  filename      = "cloudbuild.yaml"
+  project       = data.google_project.current.project_id
+  provider      = google-beta
 }
 
 resource "google_cloudbuild_trigger" "tag" {
@@ -25,6 +26,7 @@ resource "google_cloudbuild_trigger" "tag" {
   project  = data.google_project.current.project_id
   provider = google-beta
 }
+
 resource "google_cloudbuild_trigger" "terraform-apply" {
   name = "apply-authority-contribution-scraper"
   github {
