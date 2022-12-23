@@ -25,7 +25,20 @@ resource "google_cloudbuild_trigger" "tag" {
   project  = data.google_project.current.project_id
   provider = google-beta
 }
-
+resource "google_cloudbuild_trigger" "terraform-apply" {
+  name = "apply-authority-contribution-scraper"
+  github {
+    owner = "binxio"
+    name  = "authority-contribution-scraper"
+    push {
+      tag = ".*"
+    }
+  }
+  included_files = ["terraform/**"]
+  filename       = "terraform/cloudbuild.yaml"
+  project        = data.google_project.current.project_id
+  provider       = google-beta
+}
 
 resource "google_project_iam_member" "cloudbuild-editor" {
   role       = "roles/owner"
