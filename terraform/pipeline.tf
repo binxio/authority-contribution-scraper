@@ -4,7 +4,7 @@ resource "google_cloudbuild_trigger" "push" {
     owner = "binxio"
     name  = "authority-contribution-scraper"
     push {
-      branch = "master"
+      branch = "main"
     }
   }
   filename = "cloudbuild.yaml"
