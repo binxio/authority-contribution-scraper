@@ -1,5 +1,5 @@
-resource "google_cloudbuild_trigger" "push" {
-  name = "push-authority-contribution-scraper"
+resource "google_cloudbuild_trigger" "build" {
+  name = "build-authority-contribution-scraper"
   github {
     owner = "binxio"
     name  = "authority-contribution-scraper"
@@ -13,8 +13,8 @@ resource "google_cloudbuild_trigger" "push" {
   provider      = google-beta
 }
 
-resource "google_cloudbuild_trigger" "tag" {
-  name = "tag-authority-contribution-scraper"
+resource "google_cloudbuild_trigger" "release" {
+  name = "release-authority-contribution-scraper"
   github {
     owner = "binxio"
     name  = "authority-contribution-scraper"
@@ -27,8 +27,8 @@ resource "google_cloudbuild_trigger" "tag" {
   provider = google-beta
 }
 
-resource "google_cloudbuild_trigger" "terraform-apply" {
-  name = "apply-authority-contribution-scraper"
+resource "google_cloudbuild_trigger" "deploy" {
+  name = "deploy-authority-contribution-scraper"
   github {
     owner = "binxio"
     name  = "authority-contribution-scraper"
