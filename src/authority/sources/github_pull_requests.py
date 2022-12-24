@@ -94,7 +94,6 @@ class GithubPullRequests(Source):
             for member in org_members:
                 query = " ".join(
                     [
-                        "is:closed",
                         "is:pr",
                         "is:merged",
                         f"closed:>{latest.isoformat()}",
@@ -147,3 +146,4 @@ if __name__ == "__main__":
     src = GithubPullRequests(sink)
     for c in src.feed():
         print(c)
+    print(f"{src.count} merged pull requests found.")
