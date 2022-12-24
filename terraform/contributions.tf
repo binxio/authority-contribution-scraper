@@ -6,6 +6,17 @@ resource "google_bigquery_dataset" "authority" {
   }
 }
 
+
+resource "google_bigquery_dataset_iam_member" "authority_contributions_dataEditor" {
+  for_each = toset([
+    format("serviceAccount:%s", google_service_account.authority-contribution-scraper.email)
+  ])
+  dataset_id = google_bigquery_dataset.authority.dataset_id
+  project    = google_bigquery_dataset.authority.project
+  role       = "roles/bigquery.dataEditor"
+  member     = each.value
+}
+
 resource "google_bigquery_dataset_iam_member" "authority_contributions_dataViewer" {
   for_each = toset([
     "domain:binx.io",

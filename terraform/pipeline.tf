@@ -82,6 +82,6 @@ resource "google_secret_manager_secret_version" "cloudbuild-private-key" {
   secret_data = tls_private_key.cloudbuild.private_key_pem
 }
 
-output cloudbuild-public-key {
+output "cloudbuild-public-key" {
   value = tls_private_key.cloudbuild.public_key_openssh
 }
