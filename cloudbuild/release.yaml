@@ -25,7 +25,7 @@ steps:
         cat > /root/.ssh/config <<!
         Host github.com
           User git
-          StrictHostKeyChecking no
+          StrictHostKeyChecking yes
           PasswordAuthentication no
           IdentityFile /root/.ssh/id_rsa
           IdentitiesOnly yes
