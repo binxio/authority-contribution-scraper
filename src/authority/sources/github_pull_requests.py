@@ -96,6 +96,7 @@ class GithubPullRequests(Source):
                     [
                         "is:closed",
                         "is:pr",
+                        "is:merged",
                         f"closed:>{latest.isoformat()}",
                         f"author:{member['login']}",
                     ]
