@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 from tempfile import NamedTemporaryFile
 from typing import BinaryIO, IO
 from google.cloud import bigquery
@@ -51,8 +52,8 @@ class Report(object):
 
     def print_authors(self):
         job: QueryJob = self.client.query(_authors)
-        for row in job.result():
-            print(f'{row.get("month")} - {row.get("author")} - {row.get("aantal")}')
+        authors = [f'{row.get("author")} ({row.get("aantal")})' for row in job.result()]
+        print(re.sub(r" \(1\)", "", ", ".join(authors)))
 
 
 _contributions_per_month = """
@@ -60,7 +61,7 @@ _contributions_per_month = """
                from (
                select  datetime_trunc(date, MONTH) as maand ,type, count(distinct guid) as aantal,
                from `binxio-mgmt.authority.contributions` 
-               where datetime_trunc(date, year) = datetime_trunc("2022-01-01",year)
+               where date BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH) AND CURRENT_DATE() 
                group by maand, type
                ) 
                PIVOT ( 
@@ -71,10 +72,10 @@ _contributions_per_month = """
        """
 
 _authors = """
-               select  extract(month from date) as month, author, count(distinct guid) as aantal,
+               select  author, count(distinct guid) as aantal,
                from `binxio-mgmt.authority.contributions`
-               where date >= '2022-01-01' and date <= '2022-12-20'
-               group by month, author
+               where date between date_sub(date_trunc(current_date(), month), interval 1 month) and date_trunc(current_date(), month)
+               group by author
                order by aantal desc, author asc
        """
 

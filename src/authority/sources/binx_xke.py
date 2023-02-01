@@ -71,11 +71,12 @@ def create_from_document(
         )
 
 
-class BinxXkeSource(Source):
+class XkeSource(Source):
     def __init__(self, sink: Sink):
-        super(BinxXkeSource, self).__init__(sink)
+        super(XkeSource, self).__init__(sink)
         self.count = 0
         self.name = "firestore"
+        self.unit = ""
         if gcloud_config_helper.on_path():
             credentials, _ = gcloud_config_helper.default()
         else:
@@ -85,7 +86,7 @@ class BinxXkeSource(Source):
 
     def feed(self) -> Iterator[Contribution]:
         self.count = 0
-        latest = self.sink.latest_entry(unit="binx", contribution="xke")
+        latest = self.sink.latest_entry(unit=self.unit, contribution="xke")
 
         logging.info(
             "reading new XKE sessions from firestore since %s",
@@ -109,7 +110,7 @@ class BinxXkeSource(Source):
                 self.db.collection("events")
                 .document(event.id)
                 .collection("sessions-public")
-                .where("unit.id", "==", "BINX")
+                .where("unit.id", "==", self.unit.upper())
                 .stream()
             ):
                 for contribution in create_from_document(event, session):
@@ -123,6 +124,18 @@ class BinxXkeSource(Source):
                     yield contribution
 
 
+class BinxXkeSource(XkeSource):
+    def __init__(self, sink: Sink):
+        super(BinxXkeSource, self).__init__(sink)
+        self.unit = "binx"
+
+
+class CloudXkeSource(XkeSource):
+    def __init__(self, sink: Sink):
+        super(CloudXkeSource, self).__init__(sink)
+        self.unit = "cloud"
+
+
 if __name__ == "__main__":
     logging.basicConfig(
         level=os.getenv("LOG_LEVEL", "INFO"), format="%(levelname)s: %(message)s"
@@ -131,6 +144,6 @@ if __name__ == "__main__":
     sink.latest_entry = lambda unit, contribution: datetime.fromordinal(1).replace(
         tzinfo=pytz.utc
     )
-    src = BinxXkeSource(sink)
-    for c in src.feed():
-        print(c)
+    for src in [BinxXkeSource(sink), CloudXkeSource(sink)]:
+        for c in src.feed():
+            print(c)

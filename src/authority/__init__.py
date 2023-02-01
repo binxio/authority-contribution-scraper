@@ -1,3 +1,8 @@
-from authority.sources import BinxXkeSource, BinxBlogSource, GithubPullRequests
+from authority.sources import (
+    CloudXkeSource,
+    BinxXkeSource,
+    BinxBlogSource,
+    GithubPullRequests,
+)
 
-AllSources = [BinxXkeSource, BinxBlogSource, GithubPullRequests]
+AllSources = [CloudXkeSource, BinxXkeSource, BinxBlogSource, GithubPullRequests]
