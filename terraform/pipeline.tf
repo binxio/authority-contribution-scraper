@@ -1,5 +1,5 @@
 resource "google_cloudbuild_trigger" "build" {
-  name = "build authority-contribution-scraper"
+  name = "build-authority-contribution-scraper"
   github {
     owner = "binxio"
     name  = "authority-contribution-scraper"
@@ -14,7 +14,7 @@ resource "google_cloudbuild_trigger" "build" {
 }
 
 resource "google_cloudbuild_trigger" "release" {
-  name = "release authority-contribution-scraper"
+  name = "release-authority-contribution-scraper"
   github {
     owner = "binxio"
     name  = "authority-contribution-scraper"
@@ -28,7 +28,7 @@ resource "google_cloudbuild_trigger" "release" {
 }
 
 resource "google_cloudbuild_trigger" "deploy" {
-  name = "deploy authority-contribution-scraper"
+  name = "deploy-authority-contribution-scraper"
   github {
     owner = "binxio"
     name  = "authority-contribution-scraper"
