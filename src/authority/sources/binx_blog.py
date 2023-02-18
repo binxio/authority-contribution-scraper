@@ -1,9 +1,8 @@
 import logging
 import os
+import typing
 from datetime import datetime
-from typing import Iterator
 
-import feedparser
 import pytz
 import requests
 from dateutil.parser import parse as datetime_parse
@@ -12,27 +11,33 @@ from authority.contribution import Contribution
 from authority.sink import Sink
 from authority.source import Source
 
+if typing.TYPE_CHECKING:
+    import collections.abc
+
 
 class BinxBlogSource(Source):
-    def __init__(self, sink: Sink):
-        super(BinxBlogSource, self).__init__(sink)
-        self.count = 0
-        self.name = "binx.io"
+    def __init__(self, sink: "Sink"):
+        super().__init__(sink)
         self.users: dict[int, str] = {}
+
+    @property
+    def name(self):
+        return "binx.io"
 
     def get_user(self, user_id: int):
         if user_id not in self.users:
             response = requests.get(
                 f"https://binx.wpengine.com/wp-json/wp/v2/users/{user_id}",
                 headers={"User-Agent": "curl", "Accept": "application/json"},
+                timeout=10,
             )
-            assert response.status_code == 200
+            response.raise_for_status()
             self.users[user_id] = response.json()["name"]
 
         return self.users[user_id]
 
-    def feed(self) -> Iterator[Contribution]:
-        self.count = 0
+    @property
+    def _feed(self) -> "collections.abc.Iterator[Contribution]":
         latest = self.sink.latest_entry(unit="binx", contribution="blog")
         logging.info(
             "reading new blogs from https://binx.wpengine.com/blog since %s", latest
@@ -54,6 +59,7 @@ class BinxBlogSource(Source):
                     "after": after,
                 },
                 headers={"User-Agent": "curl", "Accept": "application/json"},
+                timeout=10,
             )
             if response.status_code != 200:
                 raise ValueError(
@@ -65,7 +71,7 @@ class BinxBlogSource(Source):
 
             for entry in response.json():
                 published_date = datetime_parse(entry["date_gmt"]).astimezone(pytz.utc)
-                if published_date > latest and published_date < now:
+                if latest < published_date < now:
                     contribution = Contribution(
                         guid=entry["guid"]["rendered"],
                         author=self.get_user(entry["author"]),
@@ -75,7 +81,6 @@ class BinxBlogSource(Source):
                         unit="binx",
                         type="blog",
                     )
-                    self.count = self.count + 1
                     yield contribution
 
 
@@ -88,5 +93,5 @@ if __name__ == "__main__":
         tzinfo=pytz.utc
     )
     src = BinxBlogSource(sink)
-    for c in src.feed():
+    for c in src.feed:
         print(c)

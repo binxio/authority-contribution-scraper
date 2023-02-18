@@ -1,17 +1,17 @@
 import logging
 import os
-import re
-from tempfile import NamedTemporaryFile
-from typing import BinaryIO, IO
+import tempfile
+import typing
+
+import gcloud_config_helper
+import google
+import numpy
 from google.cloud import bigquery
 from google.cloud.bigquery.job import QueryJob
-import numpy
-import google
-import gcloud_config_helper
 from matplotlib import pyplot
 
 
-class Report(object):
+class Report:
     def __init__(self):
         if gcloud_config_helper.on_path():
             credentials, project = gcloud_config_helper.default()
@@ -20,7 +20,7 @@ class Report(object):
             credentials, project = google.auth.default()
         self.client = bigquery.Client(credentials=credentials, project=project)
 
-    def get_contributions_per_month(self, stream: BinaryIO):
+    def get_contributions_per_month(self, stream: typing.IO):
         x_labels = []
         blogs = []
         xkes = []
@@ -53,7 +53,7 @@ class Report(object):
     def print_authors(self):
         job: QueryJob = self.client.query(_authors)
         authors = [f'{row.get("author")} ({row.get("aantal")})' for row in job.result()]
-        print(re.sub(r" \(1\)", "", ", ".join(authors)))
+        print(", ".join(authors).replace(" (1)", ""))
 
 
 _contributions_per_month = """
@@ -85,7 +85,7 @@ if __name__ == "__main__":
         level=os.getenv("LOG_LEVEL", "INFO"), format="%(levelname)s: %(message)s"
     )
     reporter = Report()
-    with NamedTemporaryFile(suffix=".png", delete=False) as filename:
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as filename:
         reporter.get_contributions_per_month(filename.file)
         print(filename.name)
     reporter.print_authors()

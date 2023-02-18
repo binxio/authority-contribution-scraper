@@ -1,22 +1,27 @@
+import abc
 import logging
 import os
 import re
+import typing
 from datetime import datetime
-from typing import Iterator, List
 
-import pytz
-import google
 import gcloud_config_helper
+import google
+import pytz
 from google.cloud import firestore
+
 from authority.contribution import Contribution
 from authority.sink import Sink
 from authority.source import Source
 
+if typing.TYPE_CHECKING:
+    import collections.abc
 
-def split_presenters(p: str) -> List[str]:
-    p = re.sub(r"\.", "", p)  # remove dots from names
+
+def split_presenters(p: str) -> list[str]:
+    p = p.replace(".", "")  # remove dots from names
     p = re.sub(r"\([^)]*\)", "", p)  # remove stuff between brackets
-    p = re.sub(r" vd ", " van de ", p)  # especially for Martijn :-)
+    p = p.replace(" vd ", " van de ")  # especially for Martijn :-)
     result = list(
         filter(
             lambda s: s,
@@ -27,8 +32,9 @@ def split_presenters(p: str) -> List[str]:
 
 
 def create_from_document(
-    event, session: firestore.DocumentSnapshot
-) -> Iterator[Contribution]:
+    event: "firestore.DocumentSnapshot",
+    session: "firestore.DocumentSnapshot",
+) -> "collections.abc.Generator[Contribution, None, None]":
     s = session.to_dict()
     start_time = s.get("startTime", None)
     if not start_time:
@@ -71,12 +77,9 @@ def create_from_document(
         )
 
 
-class XkeSource(Source):
-    def __init__(self, sink: Sink):
-        super(XkeSource, self).__init__(sink)
-        self.count = 0
-        self.name = "firestore"
-        self.unit = ""
+class XkeSource(Source, abc.ABC):
+    def __init__(self, sink: "Sink"):
+        super().__init__(sink)
         if gcloud_config_helper.on_path():
             credentials, _ = gcloud_config_helper.default()
         else:
@@ -84,8 +87,17 @@ class XkeSource(Source):
             credentials, _ = google.auth.default()
         self.db = firestore.Client(credentials=credentials, project="xke-nxt")
 
-    def feed(self) -> Iterator[Contribution]:
-        self.count = 0
+    @property
+    def name(self):
+        return "firestore"
+
+    @abc.abstractmethod
+    @property
+    def unit(self) -> str:
+        raise NotImplementedError()
+
+    @property
+    def _feed(self) -> "collections.abc.Iterator[Contribution]":
         latest = self.sink.latest_entry(unit=self.unit, contribution="xke")
 
         logging.info(
@@ -105,7 +117,7 @@ class XkeSource(Source):
         )
 
         for event in events.stream():
-            contributions: List[Contribution] = []
+            contributions: list["Contribution"] = []
             for session in (
                 self.db.collection("events")
                 .document(event.id)
@@ -120,20 +132,19 @@ class XkeSource(Source):
 
             for contribution in contributions:
                 if latest < contribution.date < now:
-                    self.count = self.count + 1
                     yield contribution
 
 
 class BinxXkeSource(XkeSource):
-    def __init__(self, sink: Sink):
-        super(BinxXkeSource, self).__init__(sink)
-        self.unit = "binx"
+    @property
+    def unit(self) -> str:
+        return "binx"
 
 
 class CloudXkeSource(XkeSource):
-    def __init__(self, sink: Sink):
-        super(CloudXkeSource, self).__init__(sink)
-        self.unit = "cloud"
+    @property
+    def unit(self) -> str:
+        return "cloud"
 
 
 if __name__ == "__main__":
@@ -145,5 +156,5 @@ if __name__ == "__main__":
         tzinfo=pytz.utc
     )
     for src in [BinxXkeSource(sink), CloudXkeSource(sink)]:
-        for c in src.feed():
+        for c in src.feed:
             print(c)

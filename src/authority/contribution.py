@@ -1,6 +1,8 @@
+import typing
+from datetime import datetime
+
 import pytz
 from google.cloud.bigquery import SchemaField
-from datetime import datetime
 
 Schema = [
     SchemaField("guid", "STRING", mode="REQUIRED"),
@@ -13,7 +15,7 @@ Schema = [
 ]
 
 
-class Contribution(object):
+class Contribution:
     def __init__(
         self,
         guid: str,
@@ -22,30 +24,30 @@ class Contribution(object):
         title: str,
         unit: str,
         type: str,
-        url: str = None,
+        url: typing.Optional[str] = None,
     ):
-        self.guid: str = guid
-        self.author: str = author
-        self.date: datetime = date
-        self.title: str = title
-        self.unit: str = unit
-        self.type: str = type
-        self.url: str = url
+        self.guid = guid
+        self.author = author
+        self.date = date
+        self.title = title
+        self.unit = unit
+        self.type = type
+        self.url = url
 
     @property
     def as_tuple(self):
-        return tuple(self.__getattribute__(field.name) for field in Schema)
+        return tuple(getattr(self, field.name) for field in Schema)
 
     @property
     def is_valid(self) -> bool:
-        if (
-            not self.guid
-            and self.author
-            and self.date
-            and self.title
-            and self.unit
-            and self.type
-        ):
+        if all((
+            not self.guid,
+            self.author,
+            self.date,
+            self.title,
+            self.unit,
+            self.type,
+        )):
             return False
 
         if self.date.tzinfo != pytz.utc:
