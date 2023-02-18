@@ -88,7 +88,7 @@ class GithubPullRequests(Source):
         return deepcopy(response)
 
     @property
-    def _feed(self) -> "collections.abc.Iterator[Contribution]":
+    def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
         latest = self.sink.latest_entry(unit="binx", contribution="github-pr").date()
         if latest < date(year=2018, month=1, day=1):
             latest = date(year=2018, month=1, day=1)

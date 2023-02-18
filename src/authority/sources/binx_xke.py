@@ -97,7 +97,7 @@ class XkeSource(Source, abc.ABC):
         raise NotImplementedError()
 
     @property
-    def _feed(self) -> "collections.abc.Iterator[Contribution]":
+    def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
         latest = self.sink.latest_entry(unit=self.unit, contribution="xke")
 
         logging.info(

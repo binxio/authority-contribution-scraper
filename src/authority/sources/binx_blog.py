@@ -37,7 +37,7 @@ class BinxBlogSource(Source):
         return self.users[user_id]
 
     @property
-    def _feed(self) -> "collections.abc.Iterator[Contribution]":
+    def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
         latest = self.sink.latest_entry(unit="binx", contribution="blog")
         logging.info(
             "reading new blogs from https://binx.wpengine.com/blog since %s", latest
