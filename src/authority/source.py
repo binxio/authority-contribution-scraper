@@ -13,8 +13,8 @@ class Source(abc.ABC):
         self.count = 0
         self.sink = sink
 
-    @abc.abstractmethod
     @property
+    @abc.abstractmethod
     def name(self) -> str:
         raise NotImplementedError()
 
@@ -25,7 +25,7 @@ class Source(abc.ABC):
             self.count += 1
             yield item
 
-    @abc.abstractmethod
     @property
+    @abc.abstractmethod
     def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
         raise NotImplementedError()
