@@ -1,11 +1,13 @@
-import os
 import logging
+import os
+from io import BytesIO
+
+from flask import Flask, send_file
 from flask import jsonify
+from flask_caching import Cache
+
 from authority import loader
 from authority.report import Report
-from io import BytesIO
-from flask_caching import Cache
-from flask import Flask, send_file
 
 cache = Cache(config={"CACHE_TYPE": "SimpleCache"})
 

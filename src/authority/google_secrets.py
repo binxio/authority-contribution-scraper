@@ -1,3 +1,4 @@
+import functools
 import logging
 import re
 
@@ -37,7 +38,7 @@ class SecretName:
             self.secret_id = parts[0]
             self.version = "latest"
         elif len(parts) == 2:
-            if re.match(r"([0-9]+|latest)", parts[1]):
+            if re.match(r"(\d+|latest)", parts[1]):
                 self.project_id = project_id
                 self.secret_id = parts[0]
                 self.version = parts[1]
@@ -76,12 +77,6 @@ class SecretManager:
         return response.payload.data.decode("utf-8")
 
     @staticmethod
+    @functools.lru_cache(maxsize=None)
     def get_instance(configuration: str = ""):
-        global _INSTANCES
-        if configuration not in _INSTANCES:
-            _INSTANCES[configuration] = SecretManager(configuration)
-
-        return _INSTANCES[configuration]
-
-
-_INSTANCES: dict[str, SecretManager] = {}
+        return SecretManager(configuration)
