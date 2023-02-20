@@ -27,7 +27,7 @@ def split_presenters(p: str) -> List[str]:
 
 
 def create_from_document(
-    event, session: firestore.DocumentSnapshot
+    event, session: firestore.DocumentSnapshot, unit: str
 ) -> Iterator[Contribution]:
     s = session.to_dict()
     start_time = s.get("startTime", None)
@@ -66,7 +66,7 @@ def create_from_document(
             author=presenter,
             date=start_time,
             url=url,
-            unit="binx",
+            unit=unit,
             type="xke",
         )
 
@@ -113,7 +113,7 @@ class XkeSource(Source):
                 .where("unit.id", "==", self.unit.upper())
                 .stream()
             ):
-                for contribution in create_from_document(event, session):
+                for contribution in create_from_document(event, session, self.unit):
                     contributions.append(contribution)
 
             contributions.sort(key=lambda x: x.date)
