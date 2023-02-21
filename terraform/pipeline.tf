@@ -43,8 +43,8 @@ resource "google_cloudbuild_trigger" "deploy" {
     _GIT_REPOSITORY_URL = "git@github.com:binxio/authority-contribution-scraper.git"
   }
 
-  project        = data.google_project.current.project_id
-  provider       = google-beta
+  project  = data.google_project.current.project_id
+  provider = google-beta
 }
 
 resource "google_project_iam_member" "cloudbuild-editor" {
