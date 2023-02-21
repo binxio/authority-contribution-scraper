@@ -92,8 +92,8 @@ class XkeSource(Source, abc.ABC):
     def name(self):
         return "firestore"
 
-    @abc.abstractmethod
     @property
+    @abc.abstractmethod
     def unit(self) -> str:
         raise NotImplementedError()
 
