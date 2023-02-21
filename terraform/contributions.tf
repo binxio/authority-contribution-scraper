@@ -10,7 +10,7 @@ resource "google_bigquery_dataset" "authority" {
 resource "google_bigquery_dataset_iam_member" "authority_contributions_dataEditor" {
   for_each = toset([
     format("serviceAccount:%s", google_service_account.authority-contribution-scraper.email),
-    "user:koenvanzuilen@binx.io"
+    "user:koenvanzuijlen@binx.io"
   ])
   dataset_id = google_bigquery_dataset.authority.dataset_id
   project    = google_bigquery_dataset.authority.project
