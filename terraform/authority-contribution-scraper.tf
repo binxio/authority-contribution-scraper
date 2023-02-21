@@ -12,7 +12,7 @@ resource "google_cloud_run_service" "authority-contribution-scraper" {
       container_concurrency = 1
       service_account_name  = google_service_account.authority-contribution-scraper.email
       containers {
-        image = "eu.gcr.io/binxio-mgmt/authority-contribution-scraper:0.7.0"
+        image = "eu.gcr.io/binxio-mgmt/authority-contribution-scraper:0.7.1"
       }
     }
   }
