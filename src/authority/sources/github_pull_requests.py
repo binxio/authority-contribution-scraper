@@ -57,6 +57,7 @@ class GithubPullRequests(Source):
                     if wait_time > 0:
                         logging.info("rate limited, sleeping %s seconds", wait_time)
                         sleep(wait_time)
+                        continue
 
             return response.json(), response.headers
 
