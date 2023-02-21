@@ -9,7 +9,8 @@ resource "google_bigquery_dataset" "authority" {
 
 resource "google_bigquery_dataset_iam_member" "authority_contributions_dataEditor" {
   for_each = toset([
-    format("serviceAccount:%s", google_service_account.authority-contribution-scraper.email)
+    format("serviceAccount:%s", google_service_account.authority-contribution-scraper.email),
+    "user:koenvanzuilen@binx.io"
   ])
   dataset_id = google_bigquery_dataset.authority.dataset_id
   project    = google_bigquery_dataset.authority.project
@@ -31,6 +32,7 @@ resource "google_bigquery_dataset_iam_member" "authority_contributions_dataViewe
 resource "google_project_iam_member" "bigquery_jobuser" {
   for_each = toset([
     "domain:binx.io",
+    "domain:gcp.xebia.com",
     format("serviceAccount:%s", google_service_account.authority-contribution-scraper.email)
   ])
   project = google_bigquery_dataset.authority.project
