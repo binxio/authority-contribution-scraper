@@ -1,4 +1,3 @@
-from authority.sources.binx_blog import BinxBlogSource
-from authority.sources.binx_xke import BinxXkeSource
-from authority.sources.binx_xke import CloudXkeSource
+from authority.sources.blog import BlogSource
+from authority.sources.xke import XkeSource
 from authority.sources.github_pull_requests import GithubPullRequests

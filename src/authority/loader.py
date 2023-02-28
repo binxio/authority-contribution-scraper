@@ -2,15 +2,15 @@ import logging
 import os
 import typing
 
-from authority import AllSources
 from authority.sink import Sink
+from authority.sources.factory import AuthoritySourceFactory
 
 if typing.TYPE_CHECKING:
-    from authority.source import Source
+    from authority.sources._base import Source
 
 
 class Loader:
-    def __init__(self, sink: "Sink", sources: list["Source"]):
+    def __init__(self, sink: "Sink", sources: tuple["Source"]):
         self.sources = []
         self.sink = sink
         self.sources = sources
@@ -30,7 +30,7 @@ class Loader:
 
 def main():
     sink = Sink()
-    sources = [source(sink) for source in AllSources]
+    sources = tuple(source(sink) for source in AuthoritySourceFactory.get_all_sources())
 
     loader = Loader(sink, sources)
     return loader.run()

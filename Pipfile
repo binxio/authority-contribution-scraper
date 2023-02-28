@@ -5,6 +5,10 @@ verify_ssl = true
 
 [dev-packages]
 black = "*"
+sphinx = "*"
+mypy = "*"
+sphinx-autodocgen = "*"
+sphinx-rtd-theme = "*"
 
 [packages]
 gunicorn = "*"
@@ -12,13 +16,16 @@ google-cloud-bigquery = "*"
 feedparser = "*"
 python-dateutil = "*"
 flask = "*"
-"flask-caching" = "*"
+flask-caching = "*"
 pytz = "*"
 google-cloud-secret-manager = "*"
 google-cloud-firestore = "*"
 gcloud-config-helper = "*"
 matplotlib = "==3.5.2"
 requests = "*"
+azure-identity = "*"
+msgraph-sdk = "*"
+stringcase = "*"
 
 [requires]
 python_version = "3.9"
