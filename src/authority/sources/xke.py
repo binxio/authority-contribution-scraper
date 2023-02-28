@@ -11,7 +11,7 @@ from google.cloud import firestore
 
 from authority.contribution import Contribution
 from authority.sink import Sink
-from authority.sources._base import Source
+from authority.sources.base_ import Source
 from authority.util.unit import get_unit_from_user
 
 if typing.TYPE_CHECKING:

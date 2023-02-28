@@ -10,7 +10,7 @@ from dateutil.parser import parse as datetime_parse
 from authority.contribution import Contribution
 from authority.sink import Sink
 from authority.util.unit import get_unit_from_user
-from authority.sources._base import Source
+from authority.sources.base_ import Source
 
 if typing.TYPE_CHECKING:
     import collections.abc

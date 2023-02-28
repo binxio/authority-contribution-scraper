@@ -6,7 +6,7 @@ from authority.sink import Sink
 from authority.sources.factory import AuthoritySourceFactory
 
 if typing.TYPE_CHECKING:
-    from authority.sources._base import Source
+    from authority.sources.base_ import Source
 
 
 class Loader:

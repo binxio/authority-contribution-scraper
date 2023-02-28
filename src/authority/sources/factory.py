@@ -2,7 +2,7 @@ import inspect
 import typing
 
 if typing.TYPE_CHECKING:
-    from authority.sources._base import Source
+    from authority.sources.base_ import Source
 
 
 class AuthoritySourceFactory:

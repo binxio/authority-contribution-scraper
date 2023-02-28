@@ -13,7 +13,7 @@ import requests.utils
 from authority.contribution import Contribution
 from authority.google_secrets import SecretManager
 from authority.sink import Sink
-from authority.sources._base import Source
+from authority.sources.base_ import Source
 
 if typing.TYPE_CHECKING:
     import collections.abc
