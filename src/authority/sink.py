@@ -8,6 +8,7 @@ import gcloud_config_helper
 import google
 import pytz
 from google.cloud import bigquery, exceptions
+from google.cloud.bigquery import SqlParameterScalarTypes
 from google.cloud.bigquery.job import QueryJob
 
 from authority.contribution import Contribution, Schema
@@ -55,12 +56,17 @@ class Sink:
         query_filter = " AND ".join([f"{key}={value}" for key, value in kwargs.items()])
 
         last_entry: datetime = datetime.fromordinal(1).replace(tzinfo=pytz.utc)
-        query_job_config = bigquery.QueryJobConfig(
-            query_parameters=[
-                bigquery.ScalarQueryParameter("table_ref", "STRING", self._table_ref),
-                bigquery.ScalarQueryParameter("query_filter", "INT64", query_filter),
-            ]
-        )
+        query_parameters = [
+            bigquery.ScalarQueryParameter("table_ref", "STRING", self._table_ref),
+            *[
+                bigquery.ScalarQueryParameter(
+                    name=key,
+                    type_=SqlParameterScalarTypes.DATETIME if isinstance(value, datetime) else SqlParameterScalarTypes.STRING,
+                    value=value,
+                ) for key, value in kwargs.items()
+            ],
+        ]
+        query_job_config = bigquery.QueryJobConfig(query_parameters=query_parameters)
         job: QueryJob = self.client.query(
             query=f'SELECT max(date) AS latest '
                   f'FROM @table_ref '
