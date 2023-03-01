@@ -17,7 +17,7 @@ def _unit_lookup(unit: str) -> str:
     return unit_lower
 
 
-def get_unit_from_user(user: "User") -> str:
+def get_unit_from_user(user: "User") -> typing.Optional[str]:
     """
     Returns the unit name of a given user
 
