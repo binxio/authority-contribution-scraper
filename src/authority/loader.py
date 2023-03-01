@@ -1,5 +1,6 @@
 import logging
 import os
+import traceback
 import typing
 
 from authority.sink import Sink
@@ -17,15 +18,25 @@ class Loader:
 
     def run(self):
         results = []
+        exception = None
         for source in self.sources:
-            logging.info("loading from source %s", source.name)
-            self.sink.load(source.feed)
-            results.append({"name": source.name, "count": source.count})
-            if source.count:
-                logging.info("added %d new contributions from %s", source.count, source.name)
-                continue
-            logging.info("no new contributions added from %s", source.name)
+            try:
+                results.append(self._process_source(source=source))
+            except Exception as exception:
+                traceback.print_exception(exception)
+        if exception:
+            raise exception
         return results
+
+    def _process_source(self, source: "Source"):
+        logging.info("loading from source %s", source.name)
+        self.sink.load(source.feed)
+        result = {"name": source.name, "count": source.count}
+        if source.count:
+            logging.info("added %d new contributions from %s", source.count, source.name)
+            return
+        logging.info("no new contributions added from %s", source.name)
+        return result
 
 
 def main():
