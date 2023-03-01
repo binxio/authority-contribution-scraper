@@ -114,7 +114,11 @@ class XkeSource(Source):
 
         for presenter in split_presenters(presenters):
             ms_user = self._ms_graph_api.get_user_by_display_name(display_name=presenter)
+            if not ms_user:
+                continue
             unit = get_unit_from_user(user=ms_user)
+            if not unit:
+                continue
             yield Contribution(
                 guid=url,
                 title=title,
