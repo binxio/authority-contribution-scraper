@@ -55,7 +55,7 @@ class XkeSource(Source):
 
     @property
     def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
-        latest = self.sink.latest_entry(contribution=self.contribution_type, scraper_id=self.scraper_id())
+        latest = self.sink.latest_entry(type=self.contribution_type, scraper_id=self.scraper_id())
 
         logging.info("reading new XKE sessions from firestore since %s", latest)
 

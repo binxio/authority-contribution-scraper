@@ -33,7 +33,7 @@ class BlogSource(Source):
         return "blog"
 
     def _get_latest_entry(self) -> datetime:
-        return self.sink.latest_entry(contribution=self.contribution_type, scraper_id=self.scraper_id())
+        return self.sink.latest_entry(type=self.contribution_type, scraper_id=self.scraper_id())
 
     @property
     def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
