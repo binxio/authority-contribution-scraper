@@ -13,3 +13,14 @@ every hour, after which the Authority Contribution Scraper will write new entrie
 ## Development
 Set the CLOUDSDK_PYTHON environment to a non-venv Python install corresponding to the requirements listed
 [here](https://cloud.google.com/sdk/docs/install).
+
+## Release and deploy
+To release a new version of the scraper, type:
+
+```shell
+$ pip install git-release-tag
+$ git-release-tag bump --level [patch|minor|major]
+$ git push && git push --tags
+```
+
+It will be automatically deployed.
