@@ -1,3 +1,4 @@
+import dataclasses
 import typing
 from datetime import datetime
 
@@ -11,31 +12,24 @@ Schema = [
     SchemaField("date", "DATETIME", mode="REQUIRED"),
     SchemaField("unit", "STRING", mode="REQUIRED"),
     SchemaField("type", "STRING", mode="REQUIRED"),
+    SchemaField("scraper_id", "STRING"),
     SchemaField("url", "STRING"),
 ]
 
 
+@dataclasses.dataclass
 class Contribution:
-    def __init__(
-        self,
-        guid: str,
-        author: str,
-        date: datetime,
-        title: str,
-        unit: str,
-        type: str,
-        url: typing.Optional[str] = None,
-    ):
-        self.guid = guid
-        self.author = author
-        self.date = date
-        self.title = title
-        self.unit = unit
-        self.type = type
-        self.url = url
+    guid: str
+    author: str
+    date: datetime
+    title: str
+    unit: str
+    type: str
+    scraper_id: str
+    url: typing.Optional[str] = None
 
     @property
-    def as_tuple(self):
+    def as_tuple(self) -> tuple[typing.Any]:
         return tuple(getattr(self, field.name) for field in Schema)
 
     @property

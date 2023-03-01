@@ -1,36 +1,47 @@
 import logging
 import os
+import traceback
 import typing
 
-from authority import AllSources
 from authority.sink import Sink
+from authority.sources.factory import AuthoritySourceFactory
 
 if typing.TYPE_CHECKING:
-    from authority.source import Source
+    from authority.sources.base_ import Source
 
 
 class Loader:
-    def __init__(self, sink: "Sink", sources: list["Source"]):
+    def __init__(self, sink: "Sink", sources: tuple["Source"]):
         self.sources = []
         self.sink = sink
         self.sources = sources
 
     def run(self):
         results = []
+        exception = None
         for source in self.sources:
-            logging.info("loading from source %s", source.name)
-            self.sink.load(source.feed)
-            results.append({"name": source.name, "count": source.count})
-            if source.count:
-                logging.info("added %d new contributions from %s", source.count, source.name)
-                continue
-            logging.info("no new contributions added from %s", source.name)
+            try:
+                results.append(self._process_source(source=source))
+            except Exception as exception:
+                traceback.print_exception(exception)
+        if exception:
+            raise exception
         return results
+
+    def _process_source(self, source: "Source"):
+        logging.info("loading from source %s", source.name)
+        self.sink.load(source.feed)
+        result = {"name": source.name, "count": source.count}
+        if source.count:
+            logging.info("added %d new contributions from %s", source.count, source.name)
+            return
+        logging.info("no new contributions added from %s", source.name)
+        return result
 
 
 def main():
     sink = Sink()
-    sources = [source(sink) for source in AllSources]
+    sources = tuple(source(sink) for source in AuthoritySourceFactory.get_all_sources())
 
     loader = Loader(sink, sources)
     return loader.run()

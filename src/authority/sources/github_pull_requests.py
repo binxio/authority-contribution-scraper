@@ -13,7 +13,7 @@ import requests.utils
 from authority.contribution import Contribution
 from authority.google_secrets import SecretManager
 from authority.sink import Sink
-from authority.source import Source
+from authority.sources.base_ import Source
 
 if typing.TYPE_CHECKING:
     import collections.abc
@@ -26,7 +26,7 @@ class GithubPullRequests(Source):
         self.session = requests.Session()
         self.token = os.getenv(
             "GITHUB_API_TOKEN",
-            SecretManager.get_instance().get_secret(
+            SecretManager().get_secret(
                 "authority-contribution-scraper-github-api-token"
             ),
         )
@@ -34,6 +34,14 @@ class GithubPullRequests(Source):
     @property
     def name(self) -> str:
         return "github-pull-requests"
+
+    @property
+    def contribution_type(self) -> str:
+        return "github-pr"
+
+    @classmethod
+    def scraper_id(cls) -> str:
+        return "github.com/binxio"
 
     def add_authorization(self, kwargs):
         if self.token:
@@ -51,13 +59,15 @@ class GithubPullRequests(Source):
                 if response.status_code != 403:
                     raise exception
                 rate_limit = response.headers.get("X-RateLimit-Remaining")
-                if rate_limit == "0":
-                    reset_time = response.headers.get("X-RateLimit-Reset")
-                    wait_time = int(int(reset_time) - time()) + 1
-                    if wait_time > 0:
-                        logging.info("rate limited, sleeping %s seconds", wait_time)
-                        sleep(wait_time)
-                        continue
+                if rate_limit != "0":
+                    continue
+                reset_time = response.headers.get("X-RateLimit-Reset")
+                wait_time = int(int(reset_time) - time()) + 1
+                if wait_time == 0:
+                    continue
+                logging.info("rate limited, sleeping %s seconds", wait_time)
+                sleep(wait_time)
+                continue
 
             return response.json(), response.headers
 
@@ -65,7 +75,7 @@ class GithubPullRequests(Source):
     def get_next_link(headers) -> typing.Optional[str]:
         links = requests.utils.parse_header_links(headers.get("link", ""))
         return next(
-            map(lambda l: l["url"], filter(lambda l: l.get("rel") == "next", links)),
+            map(lambda link: link["url"], filter(lambda link: link.get("rel") == "next", links)),
             None,
         )
 
@@ -83,14 +93,14 @@ class GithubPullRequests(Source):
     def get_user_info(self, username: str) -> dict:
         response, _ = self.get_rate_limited(f"https://api.github.com/users/{username}")
         if not response.get("name"):
-            logging.info("no user name for %s", username)
+            logging.info("no display name for %s", username)
             response["name"] = username
 
         return deepcopy(response)
 
     @property
     def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
-        latest = self.sink.latest_entry(unit="binx", contribution="github-pr").date()
+        latest = self.sink.latest_entry(unit="binx", contribution=self.contribution_type).date()
         if latest < date(year=2018, month=1, day=1):
             latest = date(year=2018, month=1, day=1)
 
@@ -136,22 +146,30 @@ class GithubPullRequests(Source):
                             pr["closed_at"], "%Y-%m-%dT%H:%M:%SZ"
                         ),
                         title=f'{repository} - {pr["title"]}',
-                        unit="binx",
-                        type="github-pr",
+                        unit="cloud",
+                        type=self.contribution_type,
+                        scraper_id=self.scraper_id(),
                         url=pr["url"],
                     )
                     yield contribution
 
 
 if __name__ == "__main__":
+    from pathlib import Path
+    import csv
+    import dataclasses
+
     logging.basicConfig(
         level=os.getenv("LOG_LEVEL", "INFO"), format="%(levelname)s: %(message)s"
     )
     sink = Sink()
-    sink.latest_entry = lambda unit, contribution: datetime.fromordinal(1).replace(
+    sink.latest_entry = lambda **kwargs: datetime.fromordinal(1).replace(
         tzinfo=pytz.utc
     )
     src = GithubPullRequests(sink)
-    for c in src.feed:
-        print(c)
+    with Path("./pr_output.csv").open(mode="w") as file:
+        writer = csv.DictWriter(file, fieldnames=tuple(field.name for field in dataclasses.fields(Contribution)))
+        writer.writeheader()
+        for c in src.feed:
+            writer.writerow(dataclasses.asdict(c))
     print(f"{src.count} merged pull requests found.")
