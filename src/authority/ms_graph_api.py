@@ -43,7 +43,12 @@ class MSGraphAPI:
         request = self._prepare_request(method="get", resource_path="users", query_params=query_params, headers=headers)
         with requests.Session() as session:
             response = session.send(request=request)
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as exception:
+            if response.status_code == 400:
+                return
+            raise exception
         users = response.json()
 
         return User.from_dict(**users['value'][0]) if users.get("value") else None
@@ -69,7 +74,12 @@ class MSGraphAPI:
         )
         with requests.Session() as session:
             response = session.send(request=request)
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as exception:
+            if response.status_code == 400:
+                return
+            raise exception
         user = response.json()
         return User.from_dict(**user) if user.get("id") else None
 
