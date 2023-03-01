@@ -77,6 +77,7 @@ resource "google_secret_manager_secret" "authority-scraper" {
   for_each = toset([
     "authority-contribution-scraper-github-api-token",
     "authority-contribution-scraper-ms-graph-tenant-id",
+    "authority-contribution-scraper-ms-graph-client-id",
     "authority-contribution-scraper-ms-graph-client-secret",
   ])
   secret_id = each.value
