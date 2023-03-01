@@ -53,24 +53,20 @@ class Sink:
         returns the latest date of contributions of type `contribution`
         from unit `unit`, or 0001-01-01 if none found.
         """
-        query_filter = " AND ".join([f"{key}={value}" for key, value in kwargs.items()])
-
         last_entry: datetime = datetime.fromordinal(1).replace(tzinfo=pytz.utc)
         query_parameters = [
-            bigquery.ScalarQueryParameter("table_ref", "STRING", self._table_ref),
-            *[
-                bigquery.ScalarQueryParameter(
-                    name=key,
-                    type_=SqlParameterScalarTypes.DATETIME if isinstance(value, datetime) else SqlParameterScalarTypes.STRING,
-                    value=value,
-                ) for key, value in kwargs.items()
-            ],
+            bigquery.ScalarQueryParameter(
+                name=key,
+                type_=SqlParameterScalarTypes.DATETIME if isinstance(value, datetime) else SqlParameterScalarTypes.STRING,
+                value=value,
+            ) for key, value in kwargs.items()
         ]
+        where_clause = " AND ".join(f"{key} = @{key}" for key in kwargs.keys())
         query_job_config = bigquery.QueryJobConfig(query_parameters=query_parameters)
         job: QueryJob = self.client.query(
             query=f'SELECT max(date) AS latest '
-                  f'FROM @table_ref '
-                  f'WHERE @query_filter',
+                  f'FROM {self._table_ref} '
+                  f'WHERE {where_clause}',
             job_config=query_job_config,
         )
         for entry in job.result():

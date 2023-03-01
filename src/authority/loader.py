@@ -19,14 +19,15 @@ class Loader:
 
     def run(self):
         results = []
-        exception = None
+        last_exception = None
         for source in self.sources:
             try:
                 results.append(self._process_source(source=source))
             except Exception as exception:
                 traceback.print_exception(*sys.exc_info())
-        if exception:
-            raise exception
+                last_exception = exception
+        if last_exception:
+            raise last_exception
         return results
 
     def _process_source(self, source: "Source"):
