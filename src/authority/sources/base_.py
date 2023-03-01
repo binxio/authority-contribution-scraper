@@ -1,9 +1,9 @@
 import abc
-import os
 import typing
 
 from authority.google_secrets import SecretManager
 from authority.ms_graph_api import MSGraphAPI
+from authority.util.lazy_env import lazy_env
 
 if typing.TYPE_CHECKING:
     import collections.abc
@@ -17,21 +17,21 @@ class Source(abc.ABC):
         self.count = 0
         self.sink = sink
         self._ms_graph_api = MSGraphAPI(
-            client_id=os.getenv(
-                "MS_GRAPH_CLIENT_ID",
-                SecretManager().get_secret(
+            client_id=lazy_env(
+                key="MS_GRAPH_CLIENT_ID",
+                default=lambda: SecretManager().get_secret(
                     "authority-contribution-scraper-ms-graph-client-id"
                 ),
             ),
-            tenant_id=os.getenv(
-                "MS_GRAPH_TENANT_ID",
-                SecretManager().get_secret(
+            tenant_id=lazy_env(
+                key="MS_GRAPH_TENANT_ID",
+                default=lambda: SecretManager().get_secret(
                     "authority-contribution-scraper-ms-graph-tenant-id"
                 ),
             ),
-            client_secret=os.getenv(
-                "MS_GRAPH_CLIENT_SECRET",
-                SecretManager().get_secret(
+            client_secret=lazy_env(
+                key="MS_GRAPH_CLIENT_SECRET",
+                default=lambda: SecretManager().get_secret(
                     "authority-contribution-scraper-ms-graph-client-secret"
                 ),
             ),

@@ -1,5 +1,4 @@
 import logging
-import os
 import typing
 from datetime import datetime
 
@@ -8,12 +7,12 @@ import requests
 from dateutil.parser import parse as datetime_parse
 
 from authority.contribution import Contribution
-from authority.sink import Sink
-from authority.util.unit import get_unit_from_user
 from authority.sources.base_ import Source
+from authority.util.unit import get_unit_from_user
 
 if typing.TYPE_CHECKING:
     import collections.abc
+    from authority.sink import Sink
 
 
 class BlogSource(Source):
@@ -106,6 +105,8 @@ if __name__ == "__main__":
     from pathlib import Path
     import csv
     import dataclasses
+    import os
+    from authority.sink import Sink
 
     logging.basicConfig(
         level=os.getenv("LOG_LEVEL", "INFO"), format="%(levelname)s: %(message)s"

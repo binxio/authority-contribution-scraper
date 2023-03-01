@@ -1,32 +1,31 @@
 import functools
 import logging
-import os
 import typing
 from copy import deepcopy
 from datetime import datetime, date
 from time import time, sleep
 from urllib.parse import urlparse
 
-import pytz
 import requests.utils
 
 from authority.contribution import Contribution
 from authority.google_secrets import SecretManager
-from authority.sink import Sink
 from authority.sources.base_ import Source
+from authority.util.lazy_env import lazy_env
 
 if typing.TYPE_CHECKING:
     import collections.abc
     from requests.structures import CaseInsensitiveDict
+    from authority.sink import Sink
 
 
 class GithubPullRequests(Source):
     def __init__(self, sink: "Sink"):
         super().__init__(sink)
         self.session = requests.Session()
-        self.token = os.getenv(
-            "GITHUB_API_TOKEN",
-            SecretManager().get_secret(
+        self.token = lazy_env(
+            key="GITHUB_API_TOKEN",
+            default=lambda: SecretManager().get_secret(
                 "authority-contribution-scraper-github-api-token"
             ),
         )
@@ -158,6 +157,9 @@ if __name__ == "__main__":
     from pathlib import Path
     import csv
     import dataclasses
+    import os
+    from authority.sink import Sink
+    import pytz
 
     logging.basicConfig(
         level=os.getenv("LOG_LEVEL", "INFO"), format="%(levelname)s: %(message)s"

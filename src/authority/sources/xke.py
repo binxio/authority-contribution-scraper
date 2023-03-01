@@ -1,5 +1,4 @@
 import logging
-import os
 import re
 import typing
 from datetime import datetime
@@ -10,12 +9,12 @@ import pytz
 from google.cloud import firestore
 
 from authority.contribution import Contribution
-from authority.sink import Sink
 from authority.sources.base_ import Source
 from authority.util.unit import get_unit_from_user
 
 if typing.TYPE_CHECKING:
     import collections.abc
+    from authority.sink import Sink
 
 
 def split_presenters(presenter: str) -> list[str]:
@@ -132,6 +131,8 @@ if __name__ == "__main__":
     from pathlib import Path
     import csv
     import dataclasses
+    import os
+    from authority.sink import Sink
 
     logging.basicConfig(
         level=os.getenv("LOG_LEVEL", "INFO"), format="%(levelname)s: %(message)s"
