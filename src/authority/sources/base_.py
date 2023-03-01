@@ -19,21 +19,21 @@ class Source(abc.ABC):
         self._ms_graph_api = MSGraphAPI(
             client_id=os.getenv(
                 "MS_GRAPH_CLIENT_ID",
-                # SecretManager().get_secret(
-                #     "authority-contribution-scraper-ms-graph-client-id"
-                # ),
+                SecretManager().get_secret(
+                    "authority-contribution-scraper-ms-graph-client-id"
+                ),
             ),
             tenant_id=os.getenv(
                 "MS_GRAPH_TENANT_ID",
-                # SecretManager().get_secret(
-                #     "authority-contribution-scraper-ms-graph-tenant-id"
-                # ),
+                SecretManager().get_secret(
+                    "authority-contribution-scraper-ms-graph-tenant-id"
+                ),
             ),
             client_secret=os.getenv(
                 "MS_GRAPH_CLIENT_SECRET",
-                # SecretManager().get_secret(
-                #     "authority-contribution-scraper-ms-graph-client-secret"
-                # ),
+                SecretManager().get_secret(
+                    "authority-contribution-scraper-ms-graph-client-secret"
+                ),
             ),
         )
 
