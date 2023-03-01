@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import traceback
 import typing
 
@@ -23,7 +24,7 @@ class Loader:
             try:
                 results.append(self._process_source(source=source))
             except Exception as exception:
-                traceback.print_exception(exception)
+                traceback.print_exception(*sys.exc_info())
         if exception:
             raise exception
         return results
