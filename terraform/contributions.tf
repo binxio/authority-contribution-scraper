@@ -86,6 +86,12 @@ resource "google_bigquery_table" "contributions" {
             },
             {
                 "mode": "NULLABLE",
+                "name": "scraper_id",
+                "type": "STRING",
+                "description": "id of scraper that found the contribution"
+            },
+            {
+                "mode": "NULLABLE",
                 "name": "url",
                 "type": "STRING",
                 "description": "pointing to the contribution to view"
