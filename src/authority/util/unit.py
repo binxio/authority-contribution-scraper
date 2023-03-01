@@ -10,6 +10,7 @@ def _unit_lookup(unit: str) -> str:
     units = {
         "binx.io": "cloud",
         "oblcc": "cloud",
+        "binx": "cloud",
     }
     unit_lower = unit.lower()
     if unit_lower in units:
