@@ -10,6 +10,9 @@ pylint = "*"
 sphinx = "*"
 sphinx-autoapi = "*"
 sphinx-rtd-theme = "*"
+types-python-dateutil = "*"
+types-pytz = "*"
+types-requests = "*"
 
 [packages]
 azure-identity = "*"

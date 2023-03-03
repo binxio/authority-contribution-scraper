@@ -99,7 +99,7 @@ class MSGraphAPI:
             method: str,
             resource_path: str,
             query_params: dict,
-            headers: dict = None,
+            headers: typing.Optional[dict] = None,
     ):
         if headers is None:
             headers = {}
@@ -121,14 +121,8 @@ class MSGraphAPI:
 if __name__ == "__main__":
     import os
     ms_graph_api = MSGraphAPI(
-        client_id=os.getenv(
-            "MS_GRAPH_CLIENT_ID",
-        ),
-        tenant_id=os.getenv(
-            "MS_GRAPH_TENANT_ID",
-        ),
-        client_secret=os.getenv(
-            "MS_GRAPH_CLIENT_SECRET",
-        ),
+        client_id=os.environ["MS_GRAPH_CLIENT_ID"],
+        tenant_id=os.environ["MS_GRAPH_TENANT_ID"],
+        client_secret=os.environ["MS_GRAPH_CLIENT_SECRET"],
     )
     print(ms_graph_api.get_user_by_id("koen.vanzuijlen@xebia.com"))

@@ -27,7 +27,7 @@ class AuthoritySourceFactory:
         cls.__registered_authority_sources[klass.scraper_id()] = klass
 
     @classmethod
-    def get_all_sources(cls) -> tuple[type["AuthoritySource"]]:
+    def get_all_sources(cls) -> tuple[type["AuthoritySource"], ...]:
         """
         Returns all sources registered to the factory
 

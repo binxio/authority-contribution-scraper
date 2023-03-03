@@ -35,7 +35,7 @@ class Contribution:
     url: typing.Optional[str] = None
 
     @property
-    def as_tuple(self) -> tuple[typing.Any]:
+    def as_tuple(self) -> tuple[typing.Any, ...]:
         """
         Returns a contribution as a tuple
 

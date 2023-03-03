@@ -67,7 +67,7 @@ class GithubPullRequests(AuthoritySource):
                 if rate_limit != "0":
                     continue
                 reset_time = response.headers.get("X-RateLimit-Reset")
-                wait_time = int(int(reset_time) - time()) + 1
+                wait_time = int(int(reset_time) - time()) + 1 if reset_time else 0
                 if wait_time == 0:
                     continue
                 logging.info("rate limited, sleeping %s seconds", wait_time)

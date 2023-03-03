@@ -4,6 +4,7 @@ Module containing a helper for retrieving Google Secret Manager secrets
 import dataclasses
 import logging
 import re
+import typing
 
 import gcloud_config_helper
 import google.auth
@@ -45,7 +46,7 @@ class _SecretName:
     version: str
 
     @classmethod
-    def parse(cls, name: str, project_id: str = None):
+    def parse(cls, name: str, project_id: typing.Optional[str] = None):
         """
         :param str name: (fully qualified) name of the secret, may include the version
         :param str project_id: The ID of the project where the secret is located. Ignored if

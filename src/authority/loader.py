@@ -25,7 +25,6 @@ class Loader:
         :param Sink sink: The sink to load contributions in to
         :param tuple sources: The sources to load contributions from
         """
-        self.sources = []
         self.sink = sink
         self.sources = sources
 
