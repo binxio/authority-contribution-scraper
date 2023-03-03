@@ -1,23 +1,30 @@
-import asyncio
+"""
+Module containing the MSGraphAPI wrapper
+"""
 import functools
 import typing
 
 import requests
 from azure.identity import ClientSecretCredential
-from kiota_authentication_azure.azure_identity_authentication_provider import AzureIdentityAuthenticationProvider
-from msgraph import GraphRequestAdapter, GraphServiceClient
-from msgraph.generated.users.users_request_builder import UsersRequestBuilder
 
 from authority.model.user import User
 
 
 class MSGraphAPI:
+    """
+    Wrapper for the MS Graph Rest API
+    """
     def __init__(self, tenant_id: str, client_id: str, client_secret: str):
-        self.client_credential = ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
-        # noinspection PyTypeChecker
-        auth_provider = AzureIdentityAuthenticationProvider(self.client_credential)
-        self.adapter = GraphRequestAdapter(auth_provider)
-        self.app_client = GraphServiceClient(self.adapter)
+        """
+        :param str tenant_id: The azure application tenant ID
+        :param str client_id: The azure application client ID
+        :param str client_secret: The azure application client secret
+        """
+        self.client_credential = ClientSecretCredential(
+            tenant_id=tenant_id,
+            client_id=client_id,
+            client_secret=client_secret,
+        )
 
     @functools.lru_cache(maxsize=1000)
     def get_user_by_display_name(self, display_name: str) -> typing.Optional[User]:
@@ -29,7 +36,6 @@ class MSGraphAPI:
         :return: A user if found
         :rtype: :obj:`User`
         """
-
         query_params = {
             "$select": ",".join(["displayName", "id", "mail", "department", "companyName"]),
             "$search": f"\"displayName:{display_name}\"",
@@ -40,14 +46,19 @@ class MSGraphAPI:
           "ConsistencyLevel": "eventual",
         }
 
-        request = self._prepare_request(method="get", resource_path="users", query_params=query_params, headers=headers)
+        request = self._prepare_request(
+            method="get",
+            resource_path="users",
+            query_params=query_params,
+            headers=headers,
+        )
         with requests.Session() as session:
             response = session.send(request=request)
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError as exception:
             if response.status_code == 400:
-                return
+                return None
             raise exception
         users = response.json()
 
@@ -78,7 +89,7 @@ class MSGraphAPI:
             response.raise_for_status()
         except requests.exceptions.HTTPError as exception:
             if response.status_code == 400:
-                return
+                return None
             raise exception
         user = response.json()
         return User.from_dict(**user) if user.get("id") else None
@@ -92,10 +103,14 @@ class MSGraphAPI:
     ):
         if headers is None:
             headers = {}
-        access_token = self.client_credential.get_token('https://graph.microsoft.com/.default').token
+        default_scope = 'https://graph.microsoft.com/.default'
+        access_token = self.client_credential.get_token(default_scope).token
         request = requests.PreparedRequest()
         request.prepare_method(method=method)
-        request.prepare_url(url=f"https://graph.microsoft.com/v1.0/{resource_path}", params=query_params)
+        request.prepare_url(
+            url=f"https://graph.microsoft.com/v1.0/{resource_path}",
+            params=query_params,
+        )
         request.prepare_headers(headers={
             "Authorization": f"Bearer {access_token}",
             **headers,
@@ -116,5 +131,4 @@ if __name__ == "__main__":
             "MS_GRAPH_CLIENT_SECRET",
         ),
     )
-    user = ms_graph_api.get_user_by_id("koen.vanzuijlen@xebia.com")
-    print(user)
+    print(ms_graph_api.get_user_by_id("koen.vanzuijlen@xebia.com"))

@@ -1,3 +1,6 @@
+"""
+Module containing the Sink class
+"""
 import logging
 import os
 import sys
@@ -11,13 +14,16 @@ from google.cloud import bigquery, exceptions
 from google.cloud.bigquery import SqlParameterScalarTypes
 from google.cloud.bigquery.job import QueryJob
 
-from authority.contribution import Contribution, Schema
+from authority.model.contribution import Contribution, Schema
 
 if typing.TYPE_CHECKING:
     import collections.abc
 
 
 class Sink:
+    """
+    Wrapper for BigQuery to help write contributions to BigQuery
+    """
     def __init__(self):
         if gcloud_config_helper.on_path():
             credentials, project = gcloud_config_helper.default()
@@ -26,9 +32,9 @@ class Sink:
 
         self.client = bigquery.Client(credentials=credentials, project=project)
         self._table_ref = f"{self.client.project}.authority.contributions"
-        self.table = self.create_table_if_not_exists()
+        self.table = self._create_table_if_not_exists()
 
-    def create_table_if_not_exists(self) -> bigquery.Table:
+    def _create_table_if_not_exists(self) -> bigquery.Table:
         """
         Create a BigQuery table if it doesn't exist
 
@@ -44,24 +50,19 @@ class Sink:
 
     def latest_entry(self, **kwargs) -> datetime:
         """
+        returns the latest date of contributions of type `contribution`
+        from unit `unit`, or 0001-01-01 if none found.
+
         :param kwargs: Equals filter to use to find the latest entry
-\
+
         :return: returns the latest date of contributions matching the specified filters
         :rtype: :obj:`datetime <datetime.datetime>`
         """
-        """
-        returns the latest date of contributions of type `contribution`
-        from unit `unit`, or 0001-01-01 if none found.
-        """
         last_entry: datetime = datetime.fromordinal(1).replace(tzinfo=pytz.utc)
         query_parameters = [
-            bigquery.ScalarQueryParameter(
-                name=key,
-                type_=SqlParameterScalarTypes.DATETIME if isinstance(value, datetime) else SqlParameterScalarTypes.STRING,
-                value=value,
-            ) for key, value in kwargs.items()
+            self._get_scalar_parameter(key, value) for key, value in kwargs.items()
         ]
-        where_clause = " AND ".join(f"{key} = @{key}" for key in kwargs.keys())
+        where_clause = " AND ".join(f"{key} = @{key}" for key in kwargs)
         query_job_config = bigquery.QueryJobConfig(query_parameters=query_parameters)
         job: QueryJob = self.client.query(
             query=f'SELECT max(date) AS latest '
@@ -77,7 +78,8 @@ class Sink:
         """
         Loads contributions into the BigQuery table
 
-        :param collections.abc.Generator contributions: The contributions to insert into the BigQuery Table
+        :param collections.abc.Generator contributions: The contributions to insert into the
+         BigQuery Table
         """
         try:
             result = self.client.insert_rows(
@@ -88,9 +90,21 @@ class Sink:
                 logging.error("%s", "\n".join(result))
                 sys.exit(1)
 
-        except exceptions.BadRequest as e:
-            if e.errors[0].get("message") != "No rows present in the request.":
-                raise e
+        except exceptions.BadRequest as exception:
+            if exception.errors[0].get("message") != "No rows present in the request.":
+                raise exception
+
+    @staticmethod
+    def _get_scalar_parameter(key: str, value: typing.Any) -> "bigquery.ScalarQueryParameter":
+        type_ = SqlParameterScalarTypes.STRING
+        if isinstance(value, datetime):
+            type_ = SqlParameterScalarTypes.DATETIME
+        return bigquery.ScalarQueryParameter(
+            name=key,
+            type_=type_,
+            value=value,
+        )
+
 
 
 if __name__ == "__main__":

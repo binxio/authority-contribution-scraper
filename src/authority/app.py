@@ -1,6 +1,8 @@
+"""
+Module containing the Flask app for the Authority Contribution Scraper
+"""
 import logging
 import os
-from io import BytesIO
 
 from flask import Flask, send_file
 from flask import jsonify
@@ -22,7 +24,7 @@ logging.basicConfig(
 @app.route("/scrape")
 def scrape():
     """
-    Authority contributions from authoritative sources (blog, XKE app) and store the
+    Scrapes authority contributions from authoritative sources (i.e. blog, XKE app) and stores the
     results in BigQuery.
     """
     return jsonify(loader.main())
@@ -34,9 +36,8 @@ def contributions_per_month():
     """
     generates a graph of the number of contributions per month in this calendar year.
     """
-    image = BytesIO()
     reporter = Report()
-    reporter.get_contributions_per_month(image)
+    image = reporter.get_contributions_per_month()
     image.seek(0)
     return send_file(image, mimetype="image/png")
 

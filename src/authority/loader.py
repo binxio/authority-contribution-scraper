@@ -1,3 +1,7 @@
+"""
+Module that contains the Loader class, acting as a playmaker for the
+Authority Contribution Scraper
+"""
 import logging
 import os
 import sys
@@ -8,16 +12,27 @@ from authority.sink import Sink
 from authority.sources.factory import AuthoritySourceFactory
 
 if typing.TYPE_CHECKING:
-    from authority.sources.base_ import Source
+    from authority.sources.base_ import AuthoritySource
 
 
 class Loader:
-    def __init__(self, sink: "Sink", sources: tuple["Source"]):
+    """
+    Loads contributions into the specified Sink. Acts as the playmaker by
+    processing sources.
+    """
+    def __init__(self, sink: "Sink", sources: tuple["AuthoritySource"]):
+        """
+        :param Sink sink: The sink to load contributions in to
+        :param tuple sources: The sources to load contributions from
+        """
         self.sources = []
         self.sink = sink
         self.sources = sources
 
     def run(self):
+        """
+        Loads contributions into the sink
+        """
         results = []
         last_exception = None
         for source in self.sources:
@@ -30,18 +45,21 @@ class Loader:
             raise last_exception
         return results
 
-    def _process_source(self, source: "Source"):
+    def _process_source(self, source: "AuthoritySource"):
         logging.info("loading from source %s", source.name)
         self.sink.load(source.feed)
         result = {"name": source.name, "count": source.count}
         if source.count:
             logging.info("added %d new contributions from %s", source.count, source.name)
-            return
-        logging.info("no new contributions added from %s", source.name)
+        else:
+            logging.info("no new contributions added from %s", source.name)
         return result
 
 
 def main():
+    """
+    Retrieves all contributions, writes them to the sink and returns a summary
+    """
     sink = Sink()
     sources = tuple(source(sink) for source in AuthoritySourceFactory.get_all_sources())
 

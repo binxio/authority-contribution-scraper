@@ -1,3 +1,6 @@
+"""
+Module containing helper method for retrieving a unit from a user
+"""
 import functools
 import typing
 
@@ -27,8 +30,11 @@ def get_unit_from_user(user: "User") -> typing.Optional[str]:
     :return: The unit name of the given user
     :rtype: str
     """
+    if not user:
+        return None
     unit = user.company_name
     if department := user.department:
         unit = department
     if unit:
         return _unit_lookup(unit=unit)
+    return None
