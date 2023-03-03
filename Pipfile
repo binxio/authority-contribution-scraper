@@ -5,9 +5,10 @@ verify_ssl = true
 
 [dev-packages]
 black = "*"
-sphinx = "*"
 mypy = "*"
-sphinx-autodocgen = "*"
+pylint = "*"
+sphinx = "*"
+sphinx-autoapi = "*"
 sphinx-rtd-theme = "*"
 
 [packages]
