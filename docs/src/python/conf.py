@@ -27,15 +27,12 @@ extensions = [
 autoapi_type = 'python'
 autoapi_dirs = ['../../../src']
 autoapi_python_class_content = 'both'
-# autoapi_add_toctree_entry = False
 autoapi_options = [
     'members',
     'undoc-members',
     'show-inheritance',
     'show-inheritance-diagram',
     'inherited-members',
-    # 'show-module-summary',
-    # 'special-members',
 ]
 
 
