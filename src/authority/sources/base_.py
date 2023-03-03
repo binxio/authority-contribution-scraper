@@ -20,6 +20,7 @@ class AuthoritySource(abc.ABC):
     """
     Base class for authority scrapers
     """
+
     def __init__(self, sink: "Sink"):
         """
         :param Sink sink: Sink to retrieve the latest entry from

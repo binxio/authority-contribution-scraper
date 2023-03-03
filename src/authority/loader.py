@@ -20,6 +20,7 @@ class Loader:
     Loads contributions into the specified Sink. Acts as the playmaker by
     processing sources.
     """
+
     def __init__(self, sink: "Sink", sources: tuple["AuthoritySource"]):
         """
         :param Sink sink: The sink to load contributions in to
@@ -49,7 +50,9 @@ class Loader:
         self.sink.load(source.feed)
         result = {"name": source.name, "count": source.count}
         if source.count:
-            logging.info("added %d new contributions from %s", source.count, source.name)
+            logging.info(
+                "added %d new contributions from %s", source.count, source.name
+            )
         else:
             logging.info("no new contributions added from %s", source.name)
         return result

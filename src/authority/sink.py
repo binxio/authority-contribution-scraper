@@ -24,6 +24,7 @@ class Sink:
     """
     Wrapper for BigQuery to help write contributions to BigQuery
     """
+
     def __init__(self):
         if gcloud_config_helper.on_path():
             credentials, project = gcloud_config_helper.default()
@@ -65,16 +66,18 @@ class Sink:
         where_clause = " AND ".join(f"{key} = @{key}" for key in kwargs)
         query_job_config = bigquery.QueryJobConfig(query_parameters=query_parameters)
         job: QueryJob = self.client.query(
-            query=f'SELECT max(date) AS latest '
-                  f'FROM {self._table_ref} '
-                  f'WHERE {where_clause}',
+            query=f"SELECT max(date) AS latest "
+            f"FROM {self._table_ref} "
+            f"WHERE {where_clause}",
             job_config=query_job_config,
         )
         for entry in job.result():
             return entry[0].replace(tzinfo=pytz.utc) if entry[0] else last_entry
         return last_entry
 
-    def load(self, contributions: "collections.abc.Generator[Contribution, None, None]"):
+    def load(
+        self, contributions: "collections.abc.Generator[Contribution, None, None]"
+    ):
         """
         Loads contributions into the BigQuery table
 
@@ -95,7 +98,9 @@ class Sink:
                 raise exception
 
     @staticmethod
-    def _get_scalar_parameter(key: str, value: typing.Any) -> "bigquery.ScalarQueryParameter":
+    def _get_scalar_parameter(
+        key: str, value: typing.Any
+    ) -> "bigquery.ScalarQueryParameter":
         type_ = SqlParameterScalarTypes.STRING
         if isinstance(value, datetime):
             type_ = SqlParameterScalarTypes.DATETIME
@@ -104,7 +109,6 @@ class Sink:
             type_=type_,
             value=value,
         )
-
 
 
 if __name__ == "__main__":

@@ -26,6 +26,7 @@ class GithubPullRequests(AuthoritySource):
     """
     GitHub PR scraper implementation
     """
+
     def __init__(self, sink: "Sink"):
         super().__init__(sink)
         self.session = requests.Session()
@@ -54,7 +55,9 @@ class GithubPullRequests(AuthoritySource):
             headers["Authorization"] = f"Token {self.token}"
             kwargs["headers"] = headers
 
-    def _get_rate_limited(self, url, **kwargs) -> tuple[typing.Any, "CaseInsensitiveDict[str]"]:
+    def _get_rate_limited(
+        self, url, **kwargs
+    ) -> tuple[typing.Any, "CaseInsensitiveDict[str]"]:
         self._add_authorization(kwargs)
         while True:
             response = self.session.get(url, **kwargs)
@@ -80,11 +83,16 @@ class GithubPullRequests(AuthoritySource):
     def _get_next_link(headers) -> typing.Optional[str]:
         links = requests.utils.parse_header_links(headers.get("link", ""))
         return next(
-            map(lambda link: link["url"], filter(lambda link: link.get("rel") == "next", links)),
+            map(
+                lambda link: link["url"],
+                filter(lambda link: link.get("rel") == "next", links),
+            ),
             None,
         )
 
-    def _get_paginated(self, url, **kwargs) -> "collections.abc.Generator[typing.Any, None, None]":
+    def _get_paginated(
+        self, url, **kwargs
+    ) -> "collections.abc.Generator[typing.Any, None, None]":
         response, headers = self._get_rate_limited(url, **kwargs)
         yield response
 
@@ -105,7 +113,9 @@ class GithubPullRequests(AuthoritySource):
 
     @property
     def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
-        latest = self.sink.latest_entry(unit="binx", type=self._contribution_type).date()
+        latest = self.sink.latest_entry(
+            unit="binx", type=self._contribution_type
+        ).date()
         if latest < date(year=2018, month=1, day=1):
             latest = date(year=2018, month=1, day=1)
 
@@ -126,7 +136,7 @@ class GithubPullRequests(AuthoritySource):
             )
 
             for prs in self._get_paginated(
-                    "https://api.github.com/search/issues", params={"q": query}
+                "https://api.github.com/search/issues", params={"q": query}
             ):
                 user = self._get_user_info(member["login"])
 

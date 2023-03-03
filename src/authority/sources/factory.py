@@ -12,6 +12,7 @@ class AuthoritySourceFactory:
     """
     Factory to register and retrieve authority sources from
     """
+
     __registered_authority_sources: dict[str, type["AuthoritySource"]] = {}
 
     @classmethod

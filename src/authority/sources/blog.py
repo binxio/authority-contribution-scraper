@@ -21,6 +21,7 @@ class BlogSource(AuthoritySource):
     """
     Blog scraper implementation
     """
+
     @property
     def name(self) -> str:
         return "xebia.com"
@@ -34,7 +35,9 @@ class BlogSource(AuthoritySource):
         return "blog"
 
     def _get_latest_entry(self) -> datetime:
-        return self.sink.latest_entry(type=self._contribution_type, scraper_id=self.scraper_id())
+        return self.sink.latest_entry(
+            type=self._contribution_type, scraper_id=self.scraper_id()
+        )
 
     @property
     def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
@@ -76,15 +79,17 @@ class BlogSource(AuthoritySource):
                     yield from self._process_blogpost_entry(entry, published_date)
 
     def _process_blogpost_entry(
-            self,
-            entry: dict,
-            published_date: datetime,
+        self,
+        entry: dict,
+        published_date: datetime,
     ) -> "collections.abc.Generator[Contribution, None, None]":
         for author in entry["_embedded"]["author"]:
             author_name = author.get("name")
             if not author_name:
                 continue
-            ms_user = self._ms_graph_api.get_user_by_display_name(display_name=author_name)
+            ms_user = self._ms_graph_api.get_user_by_display_name(
+                display_name=author_name
+            )
             if not ms_user:
                 continue
             unit = get_unit_from_user(user=ms_user)

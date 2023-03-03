@@ -25,6 +25,7 @@ class Contribution:
     """
     Class representing a contribution
     """
+
     guid: str
     author: str
     date: datetime
@@ -52,14 +53,16 @@ class Contribution:
         :return: True if the contribution is valid
         :rtype: bool:obj:`bool`
         """
-        if all((
-            not self.guid,
-            self.author,
-            self.date,
-            self.title,
-            self.unit,
-            self.type,
-        )):
+        if all(
+            (
+                not self.guid,
+                self.author,
+                self.date,
+                self.title,
+                self.unit,
+                self.type,
+            )
+        ):
             return False
 
         if self.date.tzinfo != pytz.utc:

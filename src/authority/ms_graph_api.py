@@ -14,6 +14,7 @@ class MSGraphAPI:
     """
     Wrapper for the MS Graph Rest API
     """
+
     def __init__(self, tenant_id: str, client_id: str, client_secret: str):
         """
         :param str tenant_id: The azure application tenant ID
@@ -37,13 +38,15 @@ class MSGraphAPI:
         :rtype: :obj:`User`
         """
         query_params = {
-            "$select": ",".join(["displayName", "id", "mail", "department", "companyName"]),
-            "$search": f"\"displayName:{display_name}\"",
+            "$select": ",".join(
+                ["displayName", "id", "mail", "department", "companyName"]
+            ),
+            "$search": f'"displayName:{display_name}"',
             "$top": 1,
             "$orderby": ",".join(["displayName"]),
         }
         headers = {
-          "ConsistencyLevel": "eventual",
+            "ConsistencyLevel": "eventual",
         }
 
         request = self._prepare_request(
@@ -62,7 +65,7 @@ class MSGraphAPI:
             raise exception
         users = response.json()
 
-        return User.from_dict(**users['value'][0]) if users.get("value") else None
+        return User.from_dict(**users["value"][0]) if users.get("value") else None
 
     @functools.lru_cache(maxsize=1000)
     def get_user_by_id(self, user_id: str) -> typing.Optional[User]:
@@ -75,7 +78,9 @@ class MSGraphAPI:
         :rtype: User
         """
         query_params = {
-            "$select": ",".join(["displayName", "id", "mail", "department", "companyName"]),
+            "$select": ",".join(
+                ["displayName", "id", "mail", "department", "companyName"]
+            ),
         }
 
         request = self._prepare_request(
@@ -95,15 +100,15 @@ class MSGraphAPI:
         return User.from_dict(**user) if user.get("id") else None
 
     def _prepare_request(
-            self,
-            method: str,
-            resource_path: str,
-            query_params: dict,
-            headers: typing.Optional[dict] = None,
+        self,
+        method: str,
+        resource_path: str,
+        query_params: dict,
+        headers: typing.Optional[dict] = None,
     ):
         if headers is None:
             headers = {}
-        default_scope = 'https://graph.microsoft.com/.default'
+        default_scope = "https://graph.microsoft.com/.default"
         access_token = self.client_credential.get_token(default_scope).token
         request = requests.PreparedRequest()
         request.prepare_method(method=method)
@@ -111,15 +116,18 @@ class MSGraphAPI:
             url=f"https://graph.microsoft.com/v1.0/{resource_path}",
             params=query_params,
         )
-        request.prepare_headers(headers={
-            "Authorization": f"Bearer {access_token}",
-            **headers,
-        })
+        request.prepare_headers(
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                **headers,
+            }
+        )
         return request
 
 
 if __name__ == "__main__":
     import os
+
     ms_graph_api = MSGraphAPI(
         client_id=os.environ["MS_GRAPH_CLIENT_ID"],
         tenant_id=os.environ["MS_GRAPH_TENANT_ID"],

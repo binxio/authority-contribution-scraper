@@ -17,6 +17,7 @@ class Report:
     """
     Class for reporting on contributions
     """
+
     def __init__(self):
         if gcloud_config_helper.on_path():
             credentials, project = gcloud_config_helper.default()

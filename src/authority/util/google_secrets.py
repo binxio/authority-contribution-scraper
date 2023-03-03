@@ -41,6 +41,7 @@ class _SecretName:
         ...
         ValueError: No project_id provided and unable to parse it from my-secret
     """
+
     project_id: str
     secret_id: str
     version: str
@@ -92,12 +93,15 @@ class SecretManager(metaclass=Singleton):
     """
     Wrapper for the Google Secret Manager
     """
+
     def __init__(self, configuration_name: str = ""):
         """
         :param str configuration_name: Name of the gcloud configuration to use for credentials
         """
         if gcloud_config_helper.on_path():
-            self.credentials = gcloud_config_helper.GCloudCredentials(configuration_name)
+            self.credentials = gcloud_config_helper.GCloudCredentials(
+                configuration_name
+            )
             self.project_id = self.credentials.project
         else:
             logging.info("using application default credentials")

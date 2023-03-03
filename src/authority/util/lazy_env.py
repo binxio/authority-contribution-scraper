@@ -9,8 +9,8 @@ if typing.TYPE_CHECKING:
 
 
 def lazy_env(
-        key: str,
-        default: "collections.abc.Callable[[], typing.Any] | typing.Any",
+    key: str,
+    default: "collections.abc.Callable[[], typing.Any] | typing.Any",
 ) -> typing.Any:
     """
     Retrieves a variable from the environment. When the environment variable has

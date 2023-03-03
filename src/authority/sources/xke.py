@@ -45,6 +45,7 @@ class XkeSource(AuthoritySource):
     """
     XKE scraper implementation
     """
+
     def __init__(self, sink: "Sink"):
         super().__init__(sink)
         if gcloud_config_helper.on_path():
@@ -68,7 +69,9 @@ class XkeSource(AuthoritySource):
 
     @property
     def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
-        latest = self.sink.latest_entry(type=self._contribution_type, scraper_id=self.scraper_id())
+        latest = self.sink.latest_entry(
+            type=self._contribution_type, scraper_id=self.scraper_id()
+        )
 
         logging.info("reading new XKE sessions from firestore since %s", latest)
 
@@ -92,9 +95,9 @@ class XkeSource(AuthoritySource):
                 .stream()
             ):
                 for contribution in self._create_contribution_from_xke_document(
-                        event=event,
-                        session=session,
-                        contribution_type=self._contribution_type,
+                    event=event,
+                    session=session,
+                    contribution_type=self._contribution_type,
                 ):
                     contributions.append(contribution)
 
@@ -105,19 +108,23 @@ class XkeSource(AuthoritySource):
                     yield contribution
 
     def _create_contribution_from_xke_document(
-            self,
-            event: "firestore.DocumentSnapshot",
-            session: "firestore.DocumentSnapshot",
-            contribution_type: str,
+        self,
+        event: "firestore.DocumentSnapshot",
+        session: "firestore.DocumentSnapshot",
+        contribution_type: str,
     ) -> "collections.abc.Generator[Contribution, None, None]":
         session_dict = session.to_dict()
 
         if not (start_time := session_dict.get("startTime", None)):
-            logging.error("%s - %s - does not have a startTime field", event.id, session.id)
+            logging.error(
+                "%s - %s - does not have a startTime field", event.id, session.id
+            )
             return
 
         if not (presenters := session_dict.get("presenter", None)):
-            logging.error("%s - %s - does not have a presenter field", event.id, session.id)
+            logging.error(
+                "%s - %s - does not have a presenter field", event.id, session.id
+            )
             return
 
         if not (title := session_dict.get("title", None)):
@@ -127,7 +134,9 @@ class XkeSource(AuthoritySource):
         url = f"https://xke.xebia.com/event/{event.id}/{session.id}/{session_dict.get('slug', '')}"
 
         for presenter in _split_presenters(presenters):
-            ms_user = self._ms_graph_api.get_user_by_display_name(display_name=presenter)
+            ms_user = self._ms_graph_api.get_user_by_display_name(
+                display_name=presenter
+            )
             if not ms_user:
                 continue
             unit = get_unit_from_user(user=ms_user)

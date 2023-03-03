@@ -7,6 +7,7 @@ class Singleton(type):
     """
     Helper class to easily create parameter-considerate Singleton instances
     """
+
     _instances: dict[tuple, object] = {}
 
     def __call__(cls, *args, **kwargs) -> object:
