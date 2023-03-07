@@ -1,3 +1,6 @@
+"""
+Module containing the Blog source class
+"""
 import logging
 import typing
 from datetime import datetime
@@ -6,16 +9,19 @@ import pytz
 import requests
 from dateutil.parser import parse as datetime_parse
 
-from authority.contribution import Contribution
-from authority.sources.base_ import Source
+from authority.model.contribution import Contribution
+from authority.sources.base_ import AuthoritySource
 from authority.util.unit import get_unit_from_user
 
 if typing.TYPE_CHECKING:
     import collections.abc
-    from authority.sink import Sink
 
 
-class BlogSource(Source):
+class BlogSource(AuthoritySource):
+    """
+    Blog scraper implementation
+    """
+
     @property
     def name(self) -> str:
         return "xebia.com"
@@ -24,15 +30,14 @@ class BlogSource(Source):
     def scraper_id(cls) -> str:
         return "xebia.com/blog"
 
-    def __init__(self, sink: "Sink"):
-        super().__init__(sink)
-
     @property
-    def contribution_type(self) -> str:
+    def _contribution_type(self) -> str:
         return "blog"
 
     def _get_latest_entry(self) -> datetime:
-        return self.sink.latest_entry(type=self.contribution_type, scraper_id=self.scraper_id())
+        return self.sink.latest_entry(
+            type=self._contribution_type, scraper_id=self.scraper_id()
+        )
 
     @property
     def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
@@ -48,7 +53,7 @@ class BlogSource(Source):
         after = latest.astimezone(pytz.UTC).replace(tzinfo=None).isoformat()
         while page <= total_pages:
             response = requests.get(
-                f"https://xebia.com/wp-json/wp/v2/posts",
+                url="https://xebia.com/wp-json/wp/v2/posts",
                 params={
                     "page": page,
                     "per_page": 50,
@@ -74,15 +79,17 @@ class BlogSource(Source):
                     yield from self._process_blogpost_entry(entry, published_date)
 
     def _process_blogpost_entry(
-            self,
-            entry: dict,
-            published_date: datetime,
+        self,
+        entry: dict,
+        published_date: datetime,
     ) -> "collections.abc.Generator[Contribution, None, None]":
         for author in entry["_embedded"]["author"]:
             author_name = author.get("name")
             if not author_name:
                 continue
-            ms_user = self._ms_graph_api.get_user_by_display_name(display_name=author_name)
+            ms_user = self._ms_graph_api.get_user_by_display_name(
+                display_name=author_name
+            )
             if not ms_user:
                 continue
             unit = get_unit_from_user(user=ms_user)
@@ -96,28 +103,12 @@ class BlogSource(Source):
                 url=entry["link"],
                 unit=unit,
                 scraper_id=self.scraper_id(),
-                type=self.contribution_type,
+                type=self._contribution_type,
             )
             yield contribution
 
 
 if __name__ == "__main__":
-    from pathlib import Path
-    import csv
-    import dataclasses
-    import os
-    from authority.sink import Sink
+    from authority.util.test_source import test_source
 
-    logging.basicConfig(
-        level=os.getenv("LOG_LEVEL", "INFO"), format="%(levelname)s: %(message)s"
-    )
-    sink = Sink()
-    sink.latest_entry = lambda **kwargs: datetime.fromordinal(1).replace(
-        tzinfo=pytz.utc
-    )
-    src = BlogSource(sink)
-    with Path("./blog_output.csv").open(mode="w") as file:
-        writer = csv.DictWriter(file, fieldnames=tuple(field.name for field in dataclasses.fields(Contribution)))
-        writer.writeheader()
-        for c in src.feed:
-            writer.writerow(dataclasses.asdict(c))
+    test_source(source=BlogSource)

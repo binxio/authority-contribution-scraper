@@ -1,3 +1,6 @@
+"""
+Module containing the Contribution model
+"""
 import dataclasses
 import typing
 from datetime import datetime
@@ -19,6 +22,10 @@ Schema = [
 
 @dataclasses.dataclass
 class Contribution:
+    """
+    Class representing a contribution
+    """
+
     guid: str
     author: str
     date: datetime
@@ -29,19 +36,33 @@ class Contribution:
     url: typing.Optional[str] = None
 
     @property
-    def as_tuple(self) -> tuple[typing.Any]:
+    def as_tuple(self) -> tuple[typing.Any, ...]:
+        """
+        Returns a contribution as a tuple
+
+        :return: A tuple representing the contribution
+        :rtype: :obj:`tuple`
+        """
         return tuple(getattr(self, field.name) for field in Schema)
 
     @property
     def is_valid(self) -> bool:
-        if all((
-            not self.guid,
-            self.author,
-            self.date,
-            self.title,
-            self.unit,
-            self.type,
-        )):
+        """
+        Returns True if the contribution is a valid contribution
+
+        :return: True if the contribution is valid
+        :rtype: bool:obj:`bool`
+        """
+        if all(
+            (
+                not self.guid,
+                self.author,
+                self.date,
+                self.title,
+                self.unit,
+                self.type,
+            )
+        ):
             return False
 
         if self.date.tzinfo != pytz.utc:

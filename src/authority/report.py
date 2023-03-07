@@ -1,17 +1,23 @@
+"""
+Module containing the Report class
+"""
 import logging
 import os
 import tempfile
-import typing
+from io import BytesIO
 
 import gcloud_config_helper
 import google
 import numpy
 from google.cloud import bigquery
-from google.cloud.bigquery.job import QueryJob
 from matplotlib import pyplot
 
 
 class Report:
+    """
+    Class for reporting on contributions
+    """
+
     def __init__(self):
         if gcloud_config_helper.on_path():
             credentials, project = gcloud_config_helper.default()
@@ -20,13 +26,20 @@ class Report:
             credentials, project = google.auth.default()
         self.client = bigquery.Client(credentials=credentials, project=project)
 
-    def get_contributions_per_month(self, stream: typing.IO):
+    def get_contributions_per_month(self) -> BytesIO:
+        """
+        Writes a plot of the contributions per month for the current calendar year
+        to a BytesIO stream
+
+        :return: A BytesIO stream containing an image
+        :rtype: :obj:`BytesIO`
+        """
         x_labels = []
         blogs = []
         xkes = []
         pull_requests = []
 
-        job: QueryJob = self.client.query(_contributions_per_month)
+        job = self.client.query(_CONTRIBUTIONS_PER_MONTH)
         for row in job.result():
             x_labels.append(row.get("maand").strftime("%B\n%Y"))
             blogs.append(row.get("blog"))
@@ -47,36 +60,45 @@ class Report:
         pyplot.title("Contributions per month")
         pyplot.legend()
         pyplot.tight_layout()
-        pyplot.savefig(stream, format="png")
+
+        image = BytesIO()
+        pyplot.savefig(image, format="png")
         pyplot.close()
+        image.seek(0)
+        return image
 
     def print_authors(self):
-        job: QueryJob = self.client.query(_authors)
+        """
+        Queries the BigQuery table and prints out the number of contributions per author
+        """
+        job = self.client.query(_AUTHORS)
         authors = [f'{row.get("author")} ({row.get("aantal")})' for row in job.result()]
         print(", ".join(authors).replace(" (1)", ""))
 
 
-_contributions_per_month = """
-               select *
-               from (
-               select  datetime_trunc(date, MONTH) as maand ,type, count(distinct guid) as aantal,
-               from `binxio-mgmt.authority.contributions` 
-               where date BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH) AND CURRENT_DATE() 
-               group by maand, type
+_CONTRIBUTIONS_PER_MONTH = """
+               SELECT *
+               FROM (
+               SELECT DATETIME_TRUNC(date, MONTH) AS maand, type, COUNT(DISTINCT guid) AS aantal,
+               FROM `binxio-mgmt.authority.contributions` 
+               WHERE date BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
+               AND CURRENT_DATE() 
+               GROUP BY maand, type
                ) 
                PIVOT ( 
                    MAX(aantal)
-                   FOR type IN ('xke', 'blog', 'github-pr' as pullrequest)
+                   FOR type IN ('xke', 'blog', 'github-pr' AS pullrequest)
                )
-               order by maand asc
+               ORDER BY maand ASC
        """
 
-_authors = """
-               select  author, count(distinct guid) as aantal,
-               from `binxio-mgmt.authority.contributions`
-               where date between date_sub(date_trunc(current_date(), month), interval 1 month) and date_trunc(current_date(), month)
-               group by author
-               order by aantal desc, author asc
+_AUTHORS = """
+               SELECT author, COUNT(DISTINCT guid) AS aantal,
+               FROM `binxio-mgmt.authority.contributions`
+               WHERE date BETWEEN DATE_SUB(DATE_TRUNC(CURRENT_DATE(), MONTH), INTERVAL 1 MONTH)
+               AND DATE_TRUNC(CURRENT_DATE(), MONTH)
+               GROUP BY author
+               ORDER BY aantal DESC, author ASC
        """
 
 
@@ -85,7 +107,8 @@ if __name__ == "__main__":
         level=os.getenv("LOG_LEVEL", "INFO"), format="%(levelname)s: %(message)s"
     )
     reporter = Report()
-    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as filename:
-        reporter.get_contributions_per_month(filename.file)
-        print(filename.name)
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False, mode="wb") as file:
+        image_stream = reporter.get_contributions_per_month()
+        file.write(image_stream.read())
+        print(file.name)
     reporter.print_authors()

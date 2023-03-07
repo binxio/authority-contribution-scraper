@@ -21,7 +21,30 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'sphinx_rtd_theme',
+    'autoapi.extension',
 ]
+
+autoapi_type = 'python'
+autoapi_dirs = ['../../../src']
+autoapi_python_class_content = 'both'
+autoapi_options = [
+    'members',
+    'undoc-members',
+    'show-inheritance',
+    'show-inheritance-diagram',
+    'inherited-members',
+]
+
+
+def skip_module_attributes(app, what, name, obj, skip, options):
+    if what == "data":
+        skip = True
+    return skip
+
+
+def setup(sphinx):
+   sphinx.connect("autoapi-skip-member", skip_module_attributes)
+
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
@@ -30,8 +53,6 @@ intersphinx_mapping = {
 
 templates_path = ['_templates']
 exclude_patterns = []
-
-
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

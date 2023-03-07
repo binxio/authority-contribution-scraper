@@ -1,3 +1,6 @@
+"""
+Module containing the User model
+"""
 import dataclasses
 import typing
 
@@ -6,6 +9,10 @@ import stringcase
 
 @dataclasses.dataclass
 class User:
+    """
+    Class representing a user as it is returned by the MS Graph API
+    """
+
     id: str
     display_name: str
     mail: str
@@ -27,6 +34,4 @@ class User:
             if (_key := stringcase.snakecase(key)) not in fields:
                 continue
             values[_key] = value
-        return cls(
-            **values
-        )
+        return cls(**values)
