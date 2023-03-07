@@ -20,9 +20,19 @@ Set the CLOUDSDK_PYTHON environment to a non-venv Python install corresponding t
 To release a new version of the scraper, type:
 
 ```shell
-$ pip install git-release-tag
-$ git-release-tag bump --level [patch|minor|major]
-$ git push && git push --tags
+pip install git-release-tag
+git-release-tag bump --level [patch|minor|major]
+git push && git push --tags
 ```
 
 It will be automatically deployed.
+
+## Documentation
+If you like to read the code documentation from your browser you can generate the HTML as follows:
+```shell
+pipenv install
+cd docs/src
+make html
+```
+After that, there'll be a `build` folder located in `docs/src`. Open the `index.html` in 
+`docs/src/build/html` in your favorite browser to view the Python documentation.
