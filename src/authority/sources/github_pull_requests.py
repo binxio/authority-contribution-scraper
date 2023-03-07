@@ -114,7 +114,7 @@ class GithubPullRequests(AuthoritySource):
     @property
     def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
         latest = self.sink.latest_entry(
-            unit="binx", type=self._contribution_type
+            unit="cloud", type=self.contribution_type
         ).date()
         if latest < date(year=2018, month=1, day=1):
             latest = date(year=2018, month=1, day=1)
