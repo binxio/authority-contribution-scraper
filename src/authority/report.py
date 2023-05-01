@@ -18,13 +18,14 @@ class Report:
     Class for reporting on contributions
     """
 
-    def __init__(self):
+    def __init__(self, unit: str = ""):
         if gcloud_config_helper.on_path():
             credentials, project = gcloud_config_helper.default()
         else:
             logging.info("using application default credentials")
             credentials, project = google.auth.default()
         self.client = bigquery.Client(credentials=credentials, project=project)
+        self.unit = unit
 
     def get_contributions_per_month(self) -> BytesIO:
         """
@@ -39,7 +40,7 @@ class Report:
         xkes = []
         pull_requests = []
 
-        job = self.client.query(_CONTRIBUTIONS_PER_MONTH)
+        job = self.client.query(_CONTRIBUTIONS_PER_MONTH.format(unit=self.unit))
         for row in job.result():
             x_labels.append(row.get("maand").strftime("%B\n%Y"))
             blogs.append(row.get("blog"))
@@ -49,12 +50,12 @@ class Report:
         blogs = list(map(lambda c: c if c else 0, blogs))
         xkes = list(map(lambda c: c if c else 0, xkes))
         pull_requests = list(map(lambda c: c if c else 0, pull_requests))
-
         x_axis = numpy.arange(len(x_labels))
         pyplot.rcParams["figure.figsize"] = (10, 5)
         pyplot.bar(x_axis - 0.2, blogs, 0.4, label="Blogs")
         pyplot.bar(x_axis + 0.2, xkes, 0.4, label="XKEs")
         pyplot.bar(x_axis + 0.4, pull_requests, 0.4, label="Github PRs")
+
         pyplot.xticks(x_axis, x_labels)
         pyplot.xticks(rotation=90)
         pyplot.title("Contributions per month")
@@ -71,7 +72,7 @@ class Report:
         """
         Queries the BigQuery table and prints out the number of contributions per author
         """
-        job = self.client.query(_AUTHORS)
+        job = self.client.query(_AUTHORS.format(unit=self.unit))
         authors = [f'{row.get("author")} ({row.get("aantal")})' for row in job.result()]
         print(", ".join(authors).replace(" (1)", ""))
 
@@ -81,8 +82,8 @@ _CONTRIBUTIONS_PER_MONTH = """
                FROM (
                SELECT DATETIME_TRUNC(date, MONTH) AS maand, type, COUNT(DISTINCT guid) AS aantal,
                FROM `binxio-mgmt.authority.contributions` 
-               WHERE date BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
-               AND CURRENT_DATE() 
+               WHERE date BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH) AND CURRENT_DATE() 
+               AND ('{unit}' = '' or unit = '{unit}')
                GROUP BY maand, type
                ) 
                PIVOT ( 
@@ -95,18 +96,23 @@ _CONTRIBUTIONS_PER_MONTH = """
 _AUTHORS = """
                SELECT author, COUNT(DISTINCT guid) AS aantal,
                FROM `binxio-mgmt.authority.contributions`
-               WHERE date BETWEEN DATE_SUB(DATE_TRUNC(CURRENT_DATE(), MONTH), INTERVAL 1 MONTH)
-               AND DATE_TRUNC(CURRENT_DATE(), MONTH)
+               WHERE date BETWEEN DATE_SUB(DATE_TRUNC(CURRENT_DATE(), MONTH), INTERVAL 1 MONTH) AND DATE_TRUNC(CURRENT_DATE(), MONTH)
+               AND ('' = '{unit}' or unit = '{unit}')
                GROUP BY author
                ORDER BY aantal DESC, author ASC
        """
 
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description='report authority contributions')
+    parser.add_argument('--unit', default='', type=str, help='to report on')
+    args = parser.parse_args()
+
     logging.basicConfig(
         level=os.getenv("LOG_LEVEL", "INFO"), format="%(levelname)s: %(message)s"
     )
-    reporter = Report()
+    reporter = Report(args.unit)
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False, mode="wb") as file:
         image_stream = reporter.get_contributions_per_month()
         file.write(image_stream.read())
