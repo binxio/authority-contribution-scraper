@@ -120,8 +120,9 @@ class GithubPullRequests(AuthoritySource):
         if latest < date(year=2018, month=1, day=1):
             latest = date(year=2018, month=1, day=1)
 
+        organization = self.scraper_id().split("/")[-1]
         for org_members in self._get_paginated(
-            "https://api.github.com/orgs/binxio/members"
+            f"https://api.github.com/orgs/{organization}/members"
         ):
             yield from self._process_org_members(latest, org_members)
 
