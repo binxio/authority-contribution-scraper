@@ -114,7 +114,8 @@ class GithubPullRequests(AuthoritySource):
     @property
     def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
         latest = self.sink.latest_entry(
-            unit="cloud", type=self._contribution_type
+            unit="cloud", type=self._contribution_type,
+            scraper_id=self.scraper_id(),
         ).date()
         if latest < date(year=2018, month=1, day=1):
             latest = date(year=2018, month=1, day=1)
@@ -169,8 +170,16 @@ class GithubPullRequests(AuthoritySource):
                     yield contribution
 
 
+class OblivionCloudControlPullRequests(GithubPullRequests):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    @classmethod
+    def scraper_id(cls) -> str:
+        return "github.com/OblivionCloudControl"
+
+
 if __name__ == "__main__":
     from authority.util.test_source import test_source
 
-    src = test_source(source=GithubPullRequests)
+    src = test_source(source=OblivionCloudControlPullRequests)
     print(f"{src.count} merged pull requests found.")
