@@ -15,11 +15,13 @@ from authority.model.contribution import Contribution
 from authority.sources.base_ import AuthoritySource
 from authority.util.google_secrets import SecretManager
 from authority.util.lazy_env import lazy_env
+from typing import Dict, List
 
 if typing.TYPE_CHECKING:
     import collections.abc
     from requests.structures import CaseInsensitiveDict
     from authority.sink import Sink
+
 
 
 class GithubPullRequests(AuthoritySource):
@@ -113,18 +115,28 @@ class GithubPullRequests(AuthoritySource):
 
     @property
     def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
-        latest = self.sink.latest_entry(
-            unit="cloud", type=self._contribution_type,
-            scraper_id=self.scraper_id(),
-        ).date()
-        if latest < date(year=2018, month=1, day=1):
-            latest = date(year=2018, month=1, day=1)
 
-        organization = self.scraper_id().split("/")[-1]
-        for org_members in self._get_paginated(
-            f"https://api.github.com/orgs/{organization}/members"
-        ):
-            yield from self._process_org_members(latest, org_members)
+        processed = set()
+        for organization in ['binxio', 'OblivionCloudControl']:
+            for org_members in self._get_paginated(
+                f"https://api.github.com/orgs/{organization}/members"
+            ):
+                for member in org_members:
+                    login = member['login']
+                    if login in processed:
+                        continue
+                    processed.add(login)
+
+                    user = self._get_user_info(login)
+                    latest = self.sink.latest_entry(
+                        unit="cloud", type=self._contribution_type,
+                        scraper_id=self.scraper_id(),
+                        author=user["name"]
+                    ).date()
+                    if latest < date(year=2018, month=1, day=1):
+                        latest = date(year=2018, month=1, day=1)
+
+                    yield from self._process_org_members(latest, [member])
 
     def _process_org_members(self, latest: date, org_members: list[dict]):
         for member in org_members:
@@ -171,16 +183,8 @@ class GithubPullRequests(AuthoritySource):
                     yield contribution
 
 
-class OblivionCloudControlPullRequests(GithubPullRequests):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-    @classmethod
-    def scraper_id(cls) -> str:
-        return "github.com/OblivionCloudControl"
-
-
 if __name__ == "__main__":
     from authority.util.test_source import test_source
 
-    src = test_source(source=OblivionCloudControlPullRequests)
+    src = test_source(source=GithubPullRequests)
     print(f"{src.count} merged pull requests found.")
