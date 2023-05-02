@@ -104,7 +104,7 @@ class GithubPullRequests(AuthoritySource):
             yield response
             next_url = self._get_next_link(headers)
 
-    @functools.lru_cache(maxsize=0, typed=True)
+    @functools.lru_cache(maxsize=64, typed=True)
     def _get_user_info(self, username: str) -> dict:
         response, _ = self._get_rate_limited(f"https://api.github.com/users/{username}")
         if not response.get("name"):
