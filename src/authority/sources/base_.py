@@ -27,26 +27,7 @@ class AuthoritySource(abc.ABC):
         """
         self.count = 0
         self.sink = sink
-        self._ms_graph_api = MSGraphAPI(
-            client_id=lazy_env(
-                key="MS_GRAPH_CLIENT_ID",
-                default=lambda: SecretManager().get_secret(
-                    "authority-contribution-scraper-ms-graph-client-id"
-                ),
-            ),
-            tenant_id=lazy_env(
-                key="MS_GRAPH_TENANT_ID",
-                default=lambda: SecretManager().get_secret(
-                    "authority-contribution-scraper-ms-graph-tenant-id"
-                ),
-            ),
-            client_secret=lazy_env(
-                key="MS_GRAPH_CLIENT_SECRET",
-                default=lambda: SecretManager().get_secret(
-                    "authority-contribution-scraper-ms-graph-client-secret"
-                ),
-            ),
-        )
+        self._ms_graph_api = MSGraphAPI.get_instance()
 
     def __init_subclass__(cls, **kwargs):
         AuthoritySourceFactory.register(cls)

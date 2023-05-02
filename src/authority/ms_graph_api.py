@@ -1,6 +1,7 @@
 """
 Module containing the MSGraphAPI wrapper
 """
+import os
 import functools
 import typing
 
@@ -8,7 +9,10 @@ import requests
 from azure.identity import ClientSecretCredential
 
 from authority.model.user import User
+from authority.util.google_secrets import SecretManager
+from authority.util.lazy_env import lazy_env
 
+_instance:"MSGraphAPI" = None
 
 class MSGraphAPI:
     """
@@ -124,13 +128,32 @@ class MSGraphAPI:
         )
         return request
 
+    @staticmethod
+    def get_instance():
+        global _instance
+        if not _instance:
+            _instance = MSGraphAPI(
+                client_id=lazy_env(
+                    key="MS_GRAPH_CLIENT_ID",
+                    default=lambda: SecretManager().get_secret(
+                        "authority-contribution-scraper-ms-graph-client-id"
+                    ),
+                ),
+                tenant_id=lazy_env(
+                    key="MS_GRAPH_TENANT_ID",
+                    default=lambda: SecretManager().get_secret(
+                        "authority-contribution-scraper-ms-graph-tenant-id"
+                    ),
+                ),
+                client_secret=lazy_env(
+                    key="MS_GRAPH_CLIENT_SECRET",
+                    default=lambda: SecretManager().get_secret(
+                        "authority-contribution-scraper-ms-graph-client-secret"
+                    ),
+                )
+            )
+        return _instance
 
 if __name__ == "__main__":
-    import os
-
-    ms_graph_api = MSGraphAPI(
-        client_id=os.environ["MS_GRAPH_CLIENT_ID"],
-        tenant_id=os.environ["MS_GRAPH_TENANT_ID"],
-        client_secret=os.environ["MS_GRAPH_CLIENT_SECRET"],
-    )
-    print(ms_graph_api.get_user_by_id("koen.vanzuijlen@xebia.com"))
+    ms_graph_api = MSGraphAPI.get_instance()
+    print(ms_graph_api.get_user_by_display_name("Maikel van Amen"))
