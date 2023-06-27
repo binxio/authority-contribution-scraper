@@ -81,9 +81,10 @@ _CONTRIBUTIONS_PER_MONTH = """
                SELECT *
                FROM (
                SELECT DATETIME_TRUNC(date, MONTH) AS maand, type, COUNT(DISTINCT guid) AS aantal,
-               FROM `binxio-mgmt.authority.contributions` 
+               FROM `binxio-mgmt.authority.contributions` c, `binxio-mgmt.authority.contributors` a 
                WHERE date BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH) AND CURRENT_DATE() 
-               AND ('{unit}' = '' or unit = '{unit}')
+               AND c.author = a.author
+               AND ('{unit}' = '' or a.unit = '{unit}')
                GROUP BY maand, type
                ) 
                PIVOT ( 
@@ -94,19 +95,22 @@ _CONTRIBUTIONS_PER_MONTH = """
        """
 
 _AUTHORS = """
-               SELECT author, COUNT(DISTINCT guid) AS aantal,
-               FROM `binxio-mgmt.authority.contributions`
-               WHERE date BETWEEN DATE_SUB(DATE_TRUNC(CURRENT_DATE(), MONTH), INTERVAL 1 MONTH) AND DATE_TRUNC(CURRENT_DATE(), MONTH)
-               AND ('' = '{unit}' or unit = '{unit}')
-               GROUP BY author
+               SELECT c.author, COUNT(DISTINCT guid) AS aantal,
+               FROM `binxio-mgmt.authority.contributions` c, `binxio-mgmt.authority.contributors` a
+               WHERE date BETWEEN DATE_SUB(DATE_TRUNC(CURRENT_DATE(), MONTH), INTERVAL 1 MONTH) AND 
+               DATE_SUB(DATE_TRUNC(CURRENT_DATE(), MONTH), INTERVAL 0 MONTH)
+               AND c.author = a.author
+               AND ('' = '{unit}' or a.unit = '{unit}')
+               GROUP BY c.author
                ORDER BY aantal DESC, author ASC
        """
 
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description='report authority contributions')
-    parser.add_argument('--unit', default='', type=str, help='to report on')
+
+    parser = argparse.ArgumentParser(description="report authority contributions")
+    parser.add_argument("--unit", default="", type=str, help="to report on")
     args = parser.parse_args()
 
     logging.basicConfig(

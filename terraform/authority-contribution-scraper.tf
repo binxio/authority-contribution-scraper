@@ -13,6 +13,14 @@ resource "google_cloud_run_service" "authority-contribution-scraper" {
       service_account_name  = google_service_account.authority-contribution-scraper.email
       containers {
         image = "eu.gcr.io/binxio-mgmt/authority-contribution-scraper:1.0.11"
+        resources {
+          requests {
+            limits = {
+              cpu    = "2000m"
+              memory = "1024Mi"
+            }
+          }
+        }
       }
     }
   }

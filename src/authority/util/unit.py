@@ -2,10 +2,10 @@
 Module containing helper method for retrieving a unit from a user
 """
 import functools
-import typing
+import logging
 
-if typing.TYPE_CHECKING:
-    from authority.model.user import User
+from authority.model.user import User
+from authority.ms_graph_api import MSGraphAPI
 
 
 @functools.lru_cache(maxsize=None)
@@ -15,26 +15,28 @@ def _unit_lookup(unit: str) -> str:
         "oblcc": "cloud",
         "binx": "cloud",
     }
-    unit_lower = unit.lower()
-    if unit_lower in units:
-        return units[unit_lower]
-    return unit_lower
+    return units.get(unit.lower(), unit.lower())
 
 
-def get_unit_from_user(user: "User") -> typing.Optional[str]:
+def _map_user_to_unit(user: User) -> str:
     """
-    Returns the unit name of a given user
-
-    :param User user: The user of whom to return the unit for
-
-    :return: The unit name of the given user
-    :rtype: str
+    Returns the unit name of a given user, defaults to "other"
     """
-    if not user:
-        return None
-    unit = user.company_name
-    if department := user.department:
-        unit = department
-    if unit:
-        return _unit_lookup(unit=unit)
-    return None
+    unit = user.department if user.department else user.company_name
+    return _unit_lookup(unit) if unit else "other"
+
+
+def get_unit_by_display_name(ms_graph_api: MSGraphAPI, name: str) -> str:
+    unit = None
+
+    ms_user = ms_graph_api.get_user_by_display_name(display_name=name)
+    if ms_user:
+        unit = _map_user_to_unit(user=ms_user)
+
+    if not unit:
+        logging.info(
+            'Could not determine unit for user %s, defaulting to "other"', name
+        )
+        unit = "other"
+
+    return unit

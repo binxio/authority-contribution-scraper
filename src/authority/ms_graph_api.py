@@ -12,7 +12,8 @@ from authority.model.user import User
 from authority.util.google_secrets import SecretManager
 from authority.util.lazy_env import lazy_env
 
-_instance:"MSGraphAPI" = None
+_instance: "MSGraphAPI" = None
+
 
 class MSGraphAPI:
     """
@@ -150,10 +151,12 @@ class MSGraphAPI:
                     default=lambda: SecretManager().get_secret(
                         "authority-contribution-scraper-ms-graph-client-secret"
                     ),
-                )
+                ),
             )
         return _instance
+
 
 if __name__ == "__main__":
     ms_graph_api = MSGraphAPI.get_instance()
     print(ms_graph_api.get_user_by_display_name("Maikel van Amen"))
+    print(ms_graph_api.get_user_by_display_name("Jorge Liauw Calo"))

@@ -11,7 +11,6 @@ from dateutil.parser import parse as datetime_parse
 
 from authority.model.contribution import Contribution
 from authority.sources.base_ import AuthoritySource
-from authority.util.unit import get_unit_from_user
 
 if typing.TYPE_CHECKING:
     import collections.abc
@@ -84,24 +83,17 @@ class BlogSource(AuthoritySource):
         published_date: datetime,
     ) -> "collections.abc.Generator[Contribution, None, None]":
         for author in entry["_embedded"]["author"]:
-            author_name = author.get("name")
+            author_name = author.get("name", entry.get('yoast_head_json', {}).get('author'))
             if not author_name:
+                logging.error('blog without author "%s"', entry["guid"]["rendered"])
                 continue
-            ms_user = self._ms_graph_api.get_user_by_display_name(
-                display_name=author_name
-            )
-            if not ms_user:
-                continue
-            unit = get_unit_from_user(user=ms_user)
-            if not unit:
-                continue
+
             contribution = Contribution(
                 guid=entry["guid"]["rendered"],
-                author=author["name"],
+                author=author_name,
                 date=published_date,
                 title=entry["title"]["rendered"],
                 url=entry["link"],
-                unit=unit,
                 scraper_id=self.scraper_id(),
                 type=self._contribution_type,
             )

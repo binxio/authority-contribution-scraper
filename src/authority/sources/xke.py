@@ -13,7 +13,7 @@ from google.cloud import firestore
 
 from authority.model.contribution import Contribution
 from authority.sources.base_ import AuthoritySource
-from authority.util.unit import get_unit_from_user
+from authority.sink import Sink
 
 if typing.TYPE_CHECKING:
     import collections.abc
@@ -23,15 +23,11 @@ if typing.TYPE_CHECKING:
 def _split_presenters(presenter: str) -> list[str]:
     """
     Splits the presenters for an XKE session by commonly used words/punctuation
-
-    :param str presenter: String containing one or more presenters
-
-    :return: A list of presenters split from the input string
-    :rtype: :obj:`list`
     """
     presenter = presenter.replace(".", "")  # remove dots from names
     presenter = re.sub(r"\([^)]*\)", "", presenter)  # remove stuff between brackets
     presenter = presenter.replace(" vd ", " van de ")  # especially for Martijn :-)
+    presenter = re.sub(r"organi[sz]ed\s+by\s*", "", presenter)
     result = list(
         filter(
             lambda s: s,
@@ -113,6 +109,10 @@ class XkeSource(AuthoritySource):
         session: "firestore.DocumentSnapshot",
         contribution_type: str,
     ) -> "collections.abc.Generator[Contribution, None, None]":
+
+        if session.id.endswith('-protected'):
+            return None
+
         session_dict = session.to_dict()
 
         if not (start_time := session_dict.get("startTime", None)):
@@ -134,21 +134,12 @@ class XkeSource(AuthoritySource):
         url = f"https://xke.xebia.com/event/{event.id}/{session.id}/{session_dict.get('slug', '')}"
 
         for presenter in _split_presenters(presenters):
-            ms_user = self._ms_graph_api.get_user_by_display_name(
-                display_name=presenter
-            )
-            if not ms_user:
-                continue
-            unit = get_unit_from_user(user=ms_user)
-            if not unit:
-                continue
             yield Contribution(
                 guid=url,
                 title=title,
                 author=presenter,
                 date=start_time,
                 url=url,
-                unit=unit,
                 scraper_id=self.scraper_id(),
                 type=contribution_type,
             )
@@ -156,5 +147,8 @@ class XkeSource(AuthoritySource):
 
 if __name__ == "__main__":
     from authority.util.test_source import test_source
+    sink = Sink()
+    source = XkeSource(sink)
+    sink.load(source.feed)
 
-    test_source(source=XkeSource)
+    # test_source(source=XkeSource)

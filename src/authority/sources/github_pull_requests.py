@@ -23,7 +23,6 @@ if typing.TYPE_CHECKING:
     from authority.sink import Sink
 
 
-
 class GithubPullRequests(AuthoritySource):
     """
     GitHub PR scraper implementation
@@ -115,23 +114,22 @@ class GithubPullRequests(AuthoritySource):
 
     @property
     def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
-
         processed = set()
-        for organization in ['binxio', 'OblivionCloudControl']:
+        for organization in ["binxio", "OblivionCloudControl"]:
             for org_members in self._get_paginated(
                 f"https://api.github.com/orgs/{organization}/members"
             ):
                 for member in org_members:
-                    login = member['login']
+                    login = member["login"]
                     if login in processed:
                         continue
                     processed.add(login)
 
                     user = self._get_user_info(login)
                     latest = self.sink.latest_entry(
-                        unit="cloud", type=self._contribution_type,
+                        type=self._contribution_type,
                         scraper_id=self.scraper_id(),
-                        author=user["name"]
+                        author=user["name"],
                     ).date()
                     if latest < date(year=2018, month=1, day=1):
                         latest = date(year=2018, month=1, day=1)
@@ -175,7 +173,6 @@ class GithubPullRequests(AuthoritySource):
                             pull_request["closed_at"], "%Y-%m-%dT%H:%M:%SZ"
                         ),
                         title=f'{repository} - {pull_request["title"]}',
-                        unit="cloud",
                         type=self._contribution_type,
                         scraper_id=self.scraper_id(),
                         url=pull_request["url"],

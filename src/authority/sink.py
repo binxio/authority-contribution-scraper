@@ -52,7 +52,7 @@ class Sink:
     def latest_entry(self, **kwargs) -> datetime:
         """
         returns the latest date of contributions of type `contribution`
-        from unit `unit`, or 0001-01-01 if none found.
+        of scraper_id
 
         :param kwargs: Equals filter to use to find the latest entry
 
