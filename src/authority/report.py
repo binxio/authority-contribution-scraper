@@ -3,6 +3,8 @@ Module containing the Report class
 """
 import logging
 import os
+import subprocess
+import textwrap
 import tempfile
 from io import BytesIO
 
@@ -18,14 +20,14 @@ class Report:
     Class for reporting on contributions
     """
 
-    def __init__(self, unit: str = ""):
+    def __init__(self, units: [str]):
         if gcloud_config_helper.on_path():
             credentials, project = gcloud_config_helper.default()
         else:
             logging.info("using application default credentials")
             credentials, project = google.auth.default()
         self.client = bigquery.Client(credentials=credentials, project=project)
-        self.unit = unit
+        self.units = units
 
     def get_contributions_per_month(self) -> BytesIO:
         """
@@ -40,7 +42,9 @@ class Report:
         xkes = []
         pull_requests = []
 
-        job = self.client.query(_CONTRIBUTIONS_PER_MONTH.format(unit=self.unit))
+        select = _CONTRIBUTIONS_PER_MONTH.format(
+            units=', '.join(map(lambda x: f'"{x}"', self.units)))
+        job = self.client.query(select)
         for row in job.result():
             x_labels.append(row.get("maand").strftime("%B\n%Y"))
             blogs.append(row.get("blog"))
@@ -72,9 +76,13 @@ class Report:
         """
         Queries the BigQuery table and prints out the number of contributions per author
         """
-        job = self.client.query(_AUTHORS.format(unit=self.unit))
+        job = self.client.query(_AUTHORS.format(
+            units=', '.join(map(lambda x: f'"{x}"', self.units))))
         authors = [f'{row.get("author")} ({row.get("aantal")})' for row in job.result()]
-        print(", ".join(authors).replace(" (1)", ""))
+        total = sum(map(lambda c: c["aantal"], job.result()))
+
+        print(
+              f'Last month, a grand total of {total} contributions where made by ' + ", ".join(authors).replace(" (1)", ""))
 
 
 _CONTRIBUTIONS_PER_MONTH = """
@@ -83,8 +91,8 @@ _CONTRIBUTIONS_PER_MONTH = """
                SELECT DATETIME_TRUNC(date, MONTH) AS maand, type, COUNT(DISTINCT guid) AS aantal,
                FROM `binxio-mgmt.authority.contributions` c, `binxio-mgmt.authority.contributors` a 
                WHERE date BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH) AND CURRENT_DATE() 
-               AND c.author = a.author
-               AND ('{unit}' = '' or a.unit = '{unit}')
+               AND (c.author = a.author OR c.author = a.`github-handle`)
+               AND ('' = '{units}' or a.unit in ( {units} ))
                GROUP BY maand, type
                ) 
                PIVOT ( 
@@ -99,8 +107,8 @@ _AUTHORS = """
                FROM `binxio-mgmt.authority.contributions` c, `binxio-mgmt.authority.contributors` a
                WHERE date BETWEEN DATE_SUB(DATE_TRUNC(CURRENT_DATE(), MONTH), INTERVAL 1 MONTH) AND 
                DATE_SUB(DATE_TRUNC(CURRENT_DATE(), MONTH), INTERVAL 0 MONTH)
-               AND c.author = a.author
-               AND ('' = '{unit}' or a.unit = '{unit}')
+               AND (c.author = a.author OR c.author = a.`github-handle`)
+               AND ('' = '{units}' or a.unit in ({units}))
                GROUP BY c.author
                ORDER BY aantal DESC, author ASC
        """
@@ -110,7 +118,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="report authority contributions")
-    parser.add_argument("--unit", default="", type=str, help="to report on")
+    parser.add_argument("--unit", default=[], action='append', help="to report on")
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -121,4 +129,5 @@ if __name__ == "__main__":
         image_stream = reporter.get_contributions_per_month()
         file.write(image_stream.read())
         print(file.name)
+        subprocess.run(['/usr/bin/open', file.name])
     reporter.print_authors()
