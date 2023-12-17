@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" project-jdk-name="Pipenv (authority)" project-jdk-type="Python SDK">
-    <output url="file://$PROJECT_DIR$/out" />
+  <component name="Black">
+    <option name="sdkName" value="Pipenv (authority)" />
   </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="Pipenv (authority)" project-jdk-type="Python SDK" />
   <component name="ProjectType">
     <option name="id" value="jpab" />
+  </component>
+  <component name="PythonCompatibilityInspectionAdvertiser">
+    <option name="version" value="3" />
   </component>
 </project>
