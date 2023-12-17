@@ -154,9 +154,6 @@ class GithubPullRequests(AuthoritySource):
 
                 for pull_request in prs["items"]:
                     url = urlparse(pull_request["url"])
-                    if url.path.startswith(f"/repos/{member['login']}"):
-                        # PRs on your own repo? unfortunately they are not counted
-                        continue
 
                     closed_at = datetime.strptime(
                         pull_request["closed_at"], "%Y-%m-%dT%H:%M:%SZ"
