@@ -4,7 +4,6 @@ Module containing the Report class
 import logging
 import os
 import subprocess
-import textwrap
 import tempfile
 from io import BytesIO
 
@@ -13,6 +12,7 @@ import google
 import numpy
 from google.cloud import bigquery
 from matplotlib import pyplot
+from authority.model.contributor import Synchronizer
 
 
 class Report:
@@ -90,7 +90,7 @@ _CONTRIBUTIONS_PER_MONTH = """
                FROM (
                SELECT DATETIME_TRUNC(date, MONTH) AS maand, type, COUNT(DISTINCT guid) AS aantal,
                FROM `binxio-mgmt.authority.contributions` c, `binxio-mgmt.authority.contributors` a 
-               WHERE date BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH) AND CURRENT_DATE() 
+               WHERE date BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH) AND date_trunc(CURRENT_DATE(), month) 
                AND (c.author = a.author OR c.author = a.`github-handle`)
                AND ('' = '{units}' or a.unit in ( {units} ))
                GROUP BY maand, type
@@ -124,6 +124,8 @@ if __name__ == "__main__":
     logging.basicConfig(
         level=os.getenv("LOG_LEVEL", "INFO"), format="%(levelname)s: %(message)s"
     )
+
+    Synchronizer().sync()
     reporter = Report(args.unit)
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False, mode="wb") as file:
         image_stream = reporter.get_contributions_per_month()
