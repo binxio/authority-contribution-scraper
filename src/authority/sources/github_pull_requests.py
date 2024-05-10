@@ -65,7 +65,11 @@ class GithubPullRequests(AuthoritySource):
             try:
                 response.raise_for_status()
             except requests.exceptions.HTTPError as exception:
-                if response.status_code != 403:
+                if response.status_code == 422:
+                    logging.warning("failed to fetch github %s, %s", url, response.json().get("message", ""))
+                    return None, None
+
+                if response.status_code != 403 or not response.json().get("message", "").startswith("API rate limit exceeded"):
                     raise exception
                 rate_limit = response.headers.get("X-RateLimit-Remaining")
                 if rate_limit != "0":
@@ -95,13 +99,15 @@ class GithubPullRequests(AuthoritySource):
         self, url, **kwargs
     ) -> "collections.abc.Generator[typing.Any, None, None]":
         response, headers = self._get_rate_limited(url, **kwargs)
-        yield response
+        if response:
+            yield response
 
-        next_url = self._get_next_link(headers)
+        next_url = self._get_next_link(headers) if headers else None
         while next_url:
             response, headers = self._get_rate_limited(next_url)
-            yield response
-            next_url = self._get_next_link(headers)
+            if response:
+                yield response
+            next_url = self._get_next_link(headers) if headers else None
 
     @functools.lru_cache(maxsize=64, typed=True)
     def _get_user_info(self, username: str) -> dict:
@@ -115,7 +121,7 @@ class GithubPullRequests(AuthoritySource):
     @property
     def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
         processed = set()
-        for organization in ["binxio", "OblivionCloudControl"]:
+        for organization in ["xebia", "godatadriven", "binxio", "OblivionCloudControl"]:
             for org_members in self._get_paginated(
                 f"https://api.github.com/orgs/{organization}/members"
             ):
@@ -123,6 +129,7 @@ class GithubPullRequests(AuthoritySource):
                     login = member["login"]
                     if login in processed:
                         continue
+                    logging.info("getting information for %s", login)
                     processed.add(login)
 
                     user = self._get_user_info(login)
