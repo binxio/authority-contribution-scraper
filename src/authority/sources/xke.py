@@ -31,7 +31,7 @@ def _split_presenters(presenter: str) -> list[str]:
     result = list(
         filter(
             lambda s: s,
-            map(lambda s: s.strip(), re.split(r"- | -|,|\&+|/| en | and ", presenter)),
+            map(lambda s: s.strip(), re.split(r"- | -|[,|:;/&]+| en | and ", presenter)),
         )
     )
     return result if result else [presenter]
