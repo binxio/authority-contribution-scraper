@@ -42,8 +42,9 @@ class Report:
         xkes = []
         pull_requests = []
 
-        select = _CONTRIBUTIONS_PER_MONTH.format(
-            units=', '.join(map(lambda x: f'"{x}"', self.units)))
+        units = ', '.join(map(lambda x: f'"{x}"', self.units))
+        unit_filter = f'a.unit in ({units})' if units else "('all-units' = 'all-units')"
+        select = _CONTRIBUTIONS_PER_MONTH.format(unit_filter=unit_filter)
         job = self.client.query(select)
         for row in job.result():
             x_labels.append(row.get("maand").strftime("%B\n%Y"))
@@ -76,8 +77,10 @@ class Report:
         """
         Queries the BigQuery table and prints out the number of contributions per author
         """
-        job = self.client.query(_AUTHORS.format(
-            units=', '.join(map(lambda x: f'"{x}"', self.units))))
+        units = ', '.join(map(lambda x: f'"{x}"', self.units))
+        unit_filter = f'a.unit in ({units})' if units else "('all-units' = 'all-units')"
+
+        job = self.client.query(_AUTHORS.format(unit_filter=unit_filter))
         authors = [f'{row.get("author")} ({row.get("aantal")})' for row in job.result()]
         total = sum(map(lambda c: c["aantal"], job.result()))
 
@@ -92,7 +95,7 @@ _CONTRIBUTIONS_PER_MONTH = """
                FROM `binxio-mgmt.authority.contributions` c, `binxio-mgmt.authority.contributors` a 
                WHERE date BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH) AND date_trunc(CURRENT_DATE(), month) 
                AND (c.author = a.author OR c.author = a.`github-handle`)
-               AND ('' = '{units}' or a.unit in ( {units} ))
+               AND {unit_filter}
                GROUP BY maand, type
                ) 
                PIVOT ( 
@@ -108,7 +111,7 @@ _AUTHORS = """
                WHERE date BETWEEN DATE_SUB(DATE_TRUNC(CURRENT_DATE(), MONTH), INTERVAL 1 MONTH) AND 
                DATE_SUB(DATE_TRUNC(CURRENT_DATE(), MONTH), INTERVAL 0 MONTH)
                AND (c.author = a.author OR c.author = a.`github-handle`)
-               AND ('' = '{units}' or a.unit in ({units}))
+               AND {unit_filter}
                GROUP BY c.author
                ORDER BY aantal DESC, author ASC
        """
