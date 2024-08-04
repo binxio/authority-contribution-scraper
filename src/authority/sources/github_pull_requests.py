@@ -115,6 +115,7 @@ class GithubPullRequests(AuthoritySource):
     @property
     def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
         processed = set()
+        processed.add("admin-xebia")
         for organization in ["binxio", "OblivionCloudControl"]:
             for org_members in self._get_paginated(
                 f"https://api.github.com/orgs/{organization}/members"
