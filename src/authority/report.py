@@ -20,7 +20,7 @@ class Report:
     Class for reporting on contributions
     """
 
-    def __init__(self, units: [str]):
+    def __init__(self, units: [str], include_bar_labels:bool=False):
         if gcloud_config_helper.on_path():
             credentials, project = gcloud_config_helper.default()
         else:
@@ -28,6 +28,7 @@ class Report:
             credentials, project = google.auth.default()
         self.client = bigquery.Client(credentials=credentials, project=project)
         self.units = units
+        self.include_bar_labels = include_bar_labels
 
     def get_contributions_per_month(self) -> BytesIO:
         """
@@ -56,9 +57,15 @@ class Report:
         pull_requests = list(map(lambda c: c if c else 0, pull_requests))
         x_axis = numpy.arange(len(x_labels))
         pyplot.rcParams["figure.figsize"] = (10, 5)
-        pyplot.bar(x_axis - 0.2, blogs, 0.4, label="Blogs")
-        pyplot.bar(x_axis + 0.2, xkes, 0.4, label="XKEs")
-        pyplot.bar(x_axis + 0.4, pull_requests, 0.4, label="Github PRs")
+        bars = [
+            pyplot.bar(x_axis - 0.2, blogs, 0.4, label="Blogs"),
+            pyplot.bar(x_axis + 0.2, xkes, 0.4, label="XKEs"),
+            pyplot.bar(x_axis + 0.4, pull_requests, 0.4, label="Github PRs"),
+        ]
+
+        if self.include_bar_labels:
+            for bar in bars:
+               pyplot.bar_label(bar)
 
         pyplot.xticks(x_axis, x_labels)
         pyplot.xticks(rotation=90)
@@ -119,6 +126,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="report authority contributions")
     parser.add_argument("--unit", default=[], action='append', help="to report on")
+    parser.add_argument("--include-bar-labels", action="store_true", help="include numbers in bars")
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -126,7 +134,7 @@ if __name__ == "__main__":
     )
 
     Synchronizer().sync()
-    reporter = Report(args.unit)
+    reporter = Report(args.unit, args.include_bar_labels)
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False, mode="wb") as file:
         image_stream = reporter.get_contributions_per_month()
         file.write(image_stream.read())
