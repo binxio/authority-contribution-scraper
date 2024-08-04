@@ -30,6 +30,7 @@ python-dateutil = "*"
 pytz = "*"
 requests = "*"
 stringcase = "*"
+feedparser = "*"
 
 [requires]
 python_version = "3.9"
