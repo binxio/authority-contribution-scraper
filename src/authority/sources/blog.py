@@ -82,15 +82,20 @@ class BlogSource(AuthoritySource):
         entry: dict,
         published_date: datetime,
     ) -> "collections.abc.Generator[Contribution, None, None]":
-        for author in entry["_embedded"]["author"]:
-            author_name = author.get("name", entry.get('yoast_head_json', {}).get('author'))
-            if not author_name:
-                logging.error('blog without author "%s"', entry["guid"]["rendered"])
-                continue
+        author = entry.get('yoast_head_json', {}).get('author')
+        if not author:
+            logging.error('blog without author "%s"', entry["guid"]["rendered"])
+            return
 
+        authors = list(filter(lambda a: a, map(lambda a: a.strip(), author.split(","))))
+        if not authors:
+            logging.error('blog without author "%s"', entry["guid"]["rendered"])
+            return
+
+        for author in authors:
             contribution = Contribution(
                 guid=entry["guid"]["rendered"],
-                author=author_name,
+                author=author,
                 date=published_date,
                 title=entry["title"]["rendered"],
                 url=entry["link"],
