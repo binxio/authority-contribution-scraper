@@ -10,7 +10,6 @@ resource "google_bigquery_dataset" "authority" {
 resource "google_bigquery_dataset_iam_member" "authority_contributions_dataEditor" {
   for_each = toset([
     format("serviceAccount:%s", google_service_account.authority-contribution-scraper.email),
-    "user:koenvanzuijlen@binx.io"
   ])
   dataset_id = google_bigquery_dataset.authority.dataset_id
   project    = google_bigquery_dataset.authority.project
@@ -70,13 +69,6 @@ resource "google_bigquery_table" "contributions" {
                 "name": "date",
                 "type": "DATETIME",
                 "description": "of delivery of the contribution"
-            },
-            {
-                "mode": "REQUIRED",
-                "name": "unit",
-                "type": "STRING",
-                "description": "business unit the author belongs to"
-
             },
             {
                 "mode": "REQUIRED",
