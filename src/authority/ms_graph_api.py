@@ -158,5 +158,5 @@ class MSGraphAPI:
 
 if __name__ == "__main__":
     ms_graph_api = MSGraphAPI.get_instance()
-    print(ms_graph_api.get_user_by_display_name("Maikel van Amen"))
-    print(ms_graph_api.get_user_by_display_name("Jorge Liauw Calo"))
+    print(ms_graph_api.get_user_by_display_name("Mark van Holsteijn"))
+    print(ms_graph_api.get_user_by_display_name("Indra Davelaar"))
