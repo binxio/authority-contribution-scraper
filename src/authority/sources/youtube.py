@@ -61,7 +61,6 @@ class YoutubeChannel(AuthoritySource):
 
     @property
     def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
-        self._api_key = "AIzaSyDVybJyv2yT3FDIul96MaaONO8MW8pk3xM"
         api = pyyoutube.Api(api_key=self._api_key)
 
         for self.current_channel in _channels:
