@@ -7,6 +7,9 @@ resource "google_cloud_run_service" "authority-contribution-scraper" {
       annotations = {
         "autoscaling.knative.dev/maxScale" = 1
       }
+      labels = {
+        "run.googleapis.com/startupProbeType" = "Default"
+      }
     }
     spec {
       container_concurrency = 1
@@ -14,11 +17,9 @@ resource "google_cloud_run_service" "authority-contribution-scraper" {
       containers {
         image = "eu.gcr.io/binxio-mgmt/authority-contribution-scraper:1.0.11"
         resources {
-          requests {
-            limits = {
-              cpu    = "2000m"
-              memory = "1024Mi"
-            }
+          limits = {
+            cpu    = "2000m"
+            memory = "1024Mi"
           }
         }
       }
@@ -87,6 +88,7 @@ resource "google_secret_manager_secret" "authority-scraper" {
     "authority-contribution-scraper-ms-graph-tenant-id",
     "authority-contribution-scraper-ms-graph-client-id",
     "authority-contribution-scraper-ms-graph-client-secret",
+    "authority-contribution-scraper-youtube-api-key",
   ])
   secret_id = each.value
   replication {

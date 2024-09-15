@@ -6,3 +6,4 @@ from authority.sources.blog import BlogSource
 from authority.sources.github_pull_requests import GithubPullRequests
 from authority.sources.xke import XkeSource
 from authority.sources.article import AuthoritySource
+from authority.sources.youtube import YoutubeChannel
