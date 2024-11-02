@@ -56,7 +56,7 @@ class YoutubeChannel(AuthoritySource):
 
     def _get_latest_entry(self, username: str) -> datetime:
         return self.sink.latest_entry(
-            type=self._contribution_type, scraper_id=f'{self.name}/{username}'
+            type=self._contribution_type, scraper_id=self.name
         )
 
     @property
