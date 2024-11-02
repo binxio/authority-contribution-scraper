@@ -2,7 +2,10 @@
 Module containing the lazy_env helper for lazily falling back to the default value
 """
 import os
+import subprocess
 import typing
+
+from authority.util.google_secrets import SecretManager
 
 if typing.TYPE_CHECKING:
     import collections.abc
@@ -26,7 +29,14 @@ def lazy_env(
     :rtype: :obj:`Any<typing.Any>`
     """
     if value := os.getenv(key):
-        return value
+
+        if value.startswith("gsm://"):
+            return SecretManager().get_secret(value.removeprefix("gsm://"))
+        elif value.startswith("op://"):
+            return subprocess.check_output(['op', 'read', value],
+                                            text=True).rstrip()
+        else:
+            return value
     if callable(default):
         return default()
     return default

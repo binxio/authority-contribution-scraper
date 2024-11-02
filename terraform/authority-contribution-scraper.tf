@@ -89,6 +89,8 @@ resource "google_secret_manager_secret" "authority-scraper" {
     "authority-contribution-scraper-ms-graph-client-id",
     "authority-contribution-scraper-ms-graph-client-secret",
     "authority-contribution-scraper-youtube-api-key",
+    "authority-contribution-wp-username",
+    "authority-contribution-wp-password",
   ])
   secret_id = each.value
   replication {

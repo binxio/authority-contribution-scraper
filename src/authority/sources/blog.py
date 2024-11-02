@@ -1,9 +1,11 @@
 """
 Module containing the Blog source class
 """
+
+import configparser
 import logging
-import typing
-from datetime import datetime
+from datetime import datetime, timedelta
+from os.path import expanduser
 
 import pytz
 import requests
@@ -11,15 +13,33 @@ from dateutil.parser import parse as datetime_parse
 
 from authority.model.contribution import Contribution
 from authority.sources.base_ import AuthoritySource
+from typing import Generator
 
-if typing.TYPE_CHECKING:
-    import collections.abc
+from authority.util.google_secrets import SecretManager
+from authority.util.lazy_env import lazy_env
 
 
 class BlogSource(AuthoritySource):
     """
     Blog scraper implementation
     """
+
+    def __init__(self, sink):
+        super().__init__(sink)
+        config = configparser.ConfigParser()
+        config.read(expanduser("~/.wordpress.ini"))
+        self.username = lazy_env(
+            key="WP_USERNAME",
+            default=lambda: SecretManager().get_secret(
+                "authority-contribution-wordpress-username"
+            ),
+        )
+        self.password = lazy_env(
+            key="WP_PASSWORD",
+            default=lambda: SecretManager().get_secret(
+                "authority-contribution-wordpress-password"
+            ),
+        )
 
     @property
     def name(self) -> str:
@@ -39,7 +59,7 @@ class BlogSource(AuthoritySource):
         )
 
     @property
-    def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
+    def _feed(self) -> Generator[Contribution, None, None]:
         latest = self._get_latest_entry()
         logging.info(
             "reading new blogs from https://xebia.com.com/blog since %s", latest
@@ -53,6 +73,7 @@ class BlogSource(AuthoritySource):
         while page <= total_pages:
             response = requests.get(
                 url="https://xebia.com/wp-json/wp/v2/posts",
+                auth=(self.username, self.password),
                 params={
                     "page": page,
                     "per_page": 50,
@@ -81,15 +102,15 @@ class BlogSource(AuthoritySource):
         self,
         entry: dict,
         published_date: datetime,
-    ) -> "collections.abc.Generator[Contribution, None, None]":
-        author = entry.get('yoast_head_json', {}).get('author')
-        if not author:
-            logging.error('blog without author "%s"', entry["guid"]["rendered"])
-            return
-
-        authors = list(filter(lambda a: a, map(lambda a: a.strip(), author.split(","))))
+    ) -> Generator[Contribution, None, None]:
+        authors = list(
+            map(
+                lambda a: a["name"],
+                filter(lambda a: "name" in a, entry.get("_embedded", {}).get("author")),
+            )
+        )
         if not authors:
-            logging.error('blog without author "%s"', entry["guid"]["rendered"])
+            logging.error('blog without author "%s"', entry["link"])
             return
 
         for author in authors:
@@ -108,4 +129,10 @@ class BlogSource(AuthoritySource):
 if __name__ == "__main__":
     from authority.util.test_source import test_source
 
-    test_source(source=BlogSource)
+    test_source(
+        source=BlogSource,
+        latest_entry=(
+            datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            - timedelta(days=30)
+        ).astimezone(pytz.utc),
+    )
