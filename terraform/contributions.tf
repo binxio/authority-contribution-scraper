@@ -20,6 +20,7 @@ resource "google_bigquery_dataset_iam_member" "authority_contributions_dataEdito
 resource "google_bigquery_dataset_iam_member" "authority_contributions_dataViewer" {
   for_each = toset([
     "domain:binx.io",
+    "domain:xebia.com",
     format("serviceAccount:%s", google_service_account.authority-contribution-scraper.email)
   ])
   dataset_id = google_bigquery_dataset.authority.dataset_id
@@ -31,6 +32,7 @@ resource "google_bigquery_dataset_iam_member" "authority_contributions_dataViewe
 resource "google_project_iam_member" "bigquery_jobuser" {
   for_each = toset([
     "domain:binx.io",
+    "domain:xebia.com",
     "domain:gcp.xebia.com",
     format("serviceAccount:%s", google_service_account.authority-contribution-scraper.email)
   ])
