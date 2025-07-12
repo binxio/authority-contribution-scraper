@@ -6,16 +6,13 @@ import csv
 import dataclasses
 import logging
 import os
-
 from datetime import datetime
 from pathlib import Path
 
 import pytz
 
-
 from authority.model.contribution import Contribution
 from authority.sink import Sink
-
 from authority.sources.base_ import AuthoritySource
 
 
@@ -45,3 +42,4 @@ def test_source(
         for contribution in src.feed:
             writer.writerow(dataclasses.asdict(contribution))
     return src
+
