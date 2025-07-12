@@ -5,6 +5,7 @@ import logging
 import re
 import typing
 from datetime import datetime
+from typing import Dict, List, Optional
 
 import gcloud_config_helper
 import google
@@ -20,10 +21,24 @@ if typing.TYPE_CHECKING:
     from authority.sink import Sink
 
 
-def _split_presenters(presenter: str) -> list[str]:
+def _split_presenters(presenter: typing.Union[str, List[Dict]]) -> list[str]:
     """
     Splits the presenters for an XKE session by commonly used words/punctuation
     """
+    if isinstance(presenter, list):
+       presenters = list(map(lambda p: p['displayName'] if isinstance(p, dict) else _split_single_presenter(p), presenter))
+    else:
+       presenters = _split_single_presenter(presenter)
+
+    result = []
+    for presenter in presenters:
+        if isinstance(presenter, str):
+            result.append(presenter)
+        else:
+            result.extend(presenter)
+    return result
+
+def _split_single_presenter(presenter: str) -> [str]:
     presenter = presenter.replace(".", "")  # remove dots from names
     presenter = re.sub(r"\([^)]*\)", "", presenter)  # remove stuff between brackets
     presenter = presenter.replace(" vd ", " van de ")  # especially for Martijn :-)
@@ -31,11 +46,10 @@ def _split_presenters(presenter: str) -> list[str]:
     result = list(
         filter(
             lambda s: s,
-            map(lambda s: s.strip(), re.split(r"- | -|,|\&+|/| en | and ", presenter)),
+            map(lambda s: s.strip(), re.split(r"- | -|,|&+|/| en | and ", presenter)),
         )
     )
     return result if result else [presenter]
-
 
 class XkeSource(AuthoritySource):
     """
@@ -45,11 +59,11 @@ class XkeSource(AuthoritySource):
     def __init__(self, sink: "Sink"):
         super().__init__(sink)
         if gcloud_config_helper.on_path():
-            credentials, _ = gcloud_config_helper.default()
+            credentials, project = gcloud_config_helper.default()
         else:
             logging.info("using application default credentials")
-            credentials, _ = google.auth.default()
-        self.xke_db = firestore.Client(credentials=credentials, project="xke-nxt")
+            credentials, project = google.auth.default()
+        self.xke_db = firestore.Client(credentials=credentials, project=project)
 
     @property
     def name(self):
@@ -108,28 +122,28 @@ class XkeSource(AuthoritySource):
         event: "firestore.DocumentSnapshot",
         session: "firestore.DocumentSnapshot",
         contribution_type: str,
-    ) -> "collections.abc.Generator[Contribution, None, None]":
+    ) -> "collections.abc.Generator[Optional[Contribution], None, None]":
 
         if session.id.endswith('-protected'):
             return None
 
         session_dict = session.to_dict()
 
-        if not (start_time := session_dict.get("startTime", None)):
+        if not (start_time := session_dict.get("startTime")):
             logging.error(
                 "%s - %s - does not have a startTime field", event.id, session.id
             )
-            return
+            return None
 
-        if not (presenters := session_dict.get("presenter", None)):
+        if not (presenters := session_dict.get("presenter")):
             logging.error(
                 "%s - %s - does not have a presenter field", event.id, session.id
             )
-            return
+            return None
 
-        if not (title := session_dict.get("title", None)):
+        if not (title := session_dict.get("title")):
             logging.error("%s - %s - does not have a title field", event.id, session.id)
-            return
+            return None
 
         url = f"https://xke.xebia.com/event/{event.id}/{session.id}/{session_dict.get('slug', '')}"
 
@@ -146,9 +160,9 @@ class XkeSource(AuthoritySource):
 
 
 if __name__ == "__main__":
-    from authority.util.test_source import test_source
     sink = Sink()
     source = XkeSource(sink)
     sink.load(source.feed)
 
+    # from authority.util.test_source import test_source
     # test_source(source=XkeSource)
