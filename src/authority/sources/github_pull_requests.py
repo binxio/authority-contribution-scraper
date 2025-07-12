@@ -10,6 +10,7 @@ from time import time, sleep
 from urllib.parse import urlparse
 
 import requests.utils
+from requests import HTTPError
 
 from authority.model.contribution import Contribution
 from authority.sources.base_ import AuthoritySource
@@ -116,7 +117,7 @@ class GithubPullRequests(AuthoritySource):
     def _feed(self) -> "collections.abc.Generator[Contribution, None, None]":
         processed = set()
         processed.add("admin-xebia")
-        for organization in ["binxio", "OblivionCloudControl"]:
+        for organization in ["binxio", "OblivionCloudControl", "xebia"]:
             for org_members in self._get_paginated(
                 f"https://api.github.com/orgs/{organization}/members"
             ):
@@ -148,34 +149,40 @@ class GithubPullRequests(AuthoritySource):
                 )
             )
 
-            for prs in self._get_paginated(
-                "https://api.github.com/search/issues", params={"q": query}
-            ):
-                user = self._get_user_info(member["login"])
+            try:
+                for prs in self._get_paginated(
+                    "https://api.github.com/search/issues", params={"q": query}
+                ):
+                    user = self._get_user_info(member["login"])
 
-                for pull_request in prs["items"]:
-                    url = urlparse(pull_request["url"])
+                    for pull_request in prs["items"]:
+                        url = urlparse(pull_request["url"])
 
-                    closed_at = datetime.strptime(
-                        pull_request["closed_at"], "%Y-%m-%dT%H:%M:%SZ"
-                    )
-                    if closed_at.date() == date.today():
-                        # skip PRs that are closed today, to ensure we get all PRs.
-                        continue
-
-                    repository = "/".join(url.path.split("/")[2:4])
-                    contribution = Contribution(
-                        guid=pull_request["url"],
-                        author=user["name"],
-                        date=datetime.strptime(
+                        closed_at = datetime.strptime(
                             pull_request["closed_at"], "%Y-%m-%dT%H:%M:%SZ"
-                        ),
-                        title=f'{repository} - {pull_request["title"]}',
-                        type=self._contribution_type,
-                        scraper_id=self.scraper_id(),
-                        url=pull_request["url"],
-                    )
-                    yield contribution
+                        )
+                        if closed_at.date() == date.today():
+                            # skip PRs that are closed today, to ensure we get all PRs.
+                            continue
+
+                        repository = "/".join(url.path.split("/")[2:4])
+                        contribution = Contribution(
+                            guid=pull_request["url"],
+                            author=user["name"],
+                            date=datetime.strptime(
+                                pull_request["closed_at"], "%Y-%m-%dT%H:%M:%SZ"
+                            ),
+                            title=f'{repository} - {pull_request["title"]}',
+                            type=self._contribution_type,
+                            scraper_id=self.scraper_id(),
+                            url=pull_request["url"],
+                        )
+                        yield contribution
+            except HTTPError as e:
+                if e.response.status_code == 422:
+                    logging.warning("could not query issues for user %s, %s", member['login'], e.response.text)
+                else:
+                    raise
 
 
 if __name__ == "__main__":
