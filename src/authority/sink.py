@@ -25,14 +25,14 @@ class Sink:
     Wrapper for BigQuery to help write contributions to BigQuery
     """
 
-    def __init__(self):
+    def __init__(self, table_name: str = "authority.contributions"):
         if gcloud_config_helper.on_path():
             credentials, project = gcloud_config_helper.default()
         else:
             credentials, project = google.auth.default()
 
         self.client = bigquery.Client(credentials=credentials, project=project)
-        self._table_ref = f"{self.client.project}.authority.contributions"
+        self._table_ref = f"{self.client.project}.{table_name}"
         self.table = self._create_table_if_not_exists()
 
     def _create_table_if_not_exists(self) -> bigquery.Table:
