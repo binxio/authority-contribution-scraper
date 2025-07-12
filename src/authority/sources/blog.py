@@ -14,6 +14,7 @@ from dateutil.parser import parse as datetime_parse
 from authority.model.contribution import Contribution
 from authority.sources.base_ import AuthoritySource
 from typing import Generator
+from functools import cache
 
 from authority.util.google_secrets import SecretManager
 from authority.util.lazy_env import lazy_env
@@ -57,6 +58,22 @@ class BlogSource(AuthoritySource):
         return self.sink.latest_entry(
             type=self._contribution_type, scraper_id=self.scraper_id()
         )
+
+    @cache
+    def _get_author_by_id(self, author_id:str) -> [str]:
+        response = requests.get(
+            url=f"https://xebia.com/wp-json/wp/v2/users/",
+            auth=(self.username, self.password),
+            params={"search": author_id},
+            headers={"User-Agent": "curl", "Accept": "application/json"},
+            timeout=10,
+        )
+        if response.status_code == 200:
+            authors = list(map(lambda x: x["name"], filter(lambda x: x["id"] == author_id, response.json())))
+            return [response.json().get("name")]
+        else:
+            logging.error( f"could nog get author by id {author_id} from {response.url}. {response.text}")
+            return []
 
     @property
     def _feed(self) -> Generator[Contribution, None, None]:
@@ -109,6 +126,9 @@ class BlogSource(AuthoritySource):
                 filter(lambda a: "name" in a, entry.get("_embedded", {}).get("author")),
             )
         )
+        if not authors:
+            authors = self._get_author_by_id(entry.get("author"))
+
         if not authors:
             logging.error('blog without author "%s"', entry["link"])
             return
