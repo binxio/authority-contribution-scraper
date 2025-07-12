@@ -17,8 +17,11 @@ def lazy_env(
 ) -> typing.Any:
     """
     Retrieves a variable from the environment. When the environment variable has
-    not been set this method determines if the default is a callable. If default
-    is a callable the result of the call will be returned, if not, default will be returned.
+    not been set this method determines if the default is a callable. If the
+    environment value is set and starts with op:// or gsm:// it is assumed that it refers
+    to an 1password or google secret manager secret, which will be read.
+    If default is a callable the result of the call will be returned, if not,
+    default will be returned.
 
     :param str key: The key of the environment variable to retrieve
     :param collections.abc.Callable | typing.Any default: The default value to use if the
