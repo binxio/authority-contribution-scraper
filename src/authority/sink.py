@@ -75,6 +75,20 @@ class Sink:
             return entry[0].replace(tzinfo=pytz.utc) if entry[0] else last_entry
         return last_entry
 
+    def _insert_rows(self, rows:[tuple]):
+        try:
+            logging.info(
+                f"insert {len(rows)} contributions into {self._table_ref}"
+            )
+            result = self.client.insert_rows(table=self.table, rows=rows)
+
+            if result:
+                logging.error("failed to add new contributions\n%s", "\n".join(result))
+                raise Exception("failed to add new contributions")
+        except exceptions.BadRequest as exception:
+            if exception.errors[0].get("message") != "No rows present in the request.":
+                raise exception
+
     def load(
         self, contributions: "collections.abc.Generator[Contribution, None, None]"
     ):
@@ -85,13 +99,22 @@ class Sink:
          BigQuery Table
         """
         try:
-            result = self.client.insert_rows(
-                table=self.table, rows=map(lambda c: c.as_tuple, contributions)
-            )
-            if result:
-                logging.error("failed to add new contributions")
-                logging.error("%s", "\n".join(result))
-                sys.exit(1)
+            currentDate = None
+            rows: [tuple] = []
+            for contribution in contributions:
+                contribution_date = contribution.date.date()
+                if not currentDate:
+                    currentDate = contribution_date
+
+                if rows and contribution_date != currentDate:
+                    self._insert_rows(rows)
+                    rows = []
+                    currentDate = contribution_date
+
+                rows.append(contribution.as_tuple)
+
+            if rows:
+                self._insert_rows(rows)
 
         except exceptions.BadRequest as exception:
             if exception.errors[0].get("message") != "No rows present in the request.":
