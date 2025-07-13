@@ -3,37 +3,33 @@ XKE attendee scraper
 """
 import collections.abc
 import logging
+from datetime import datetime
 
 import gcloud_config_helper
 import google
 import pytz
 from google.cloud import firestore
+from google.api_core.retry import Retry
 
 from authority.model.contribution import Contribution
 from authority.sink import Sink
 from authority.sources.base_ import AuthoritySource
 
 
-class AttendeeSink(Sink):
-    def __init__(self):
-        super().__init__(self, table_name="authority.attendees")
-
-
 class AttendeeSource(AuthoritySource):
     """
     Attendee scrapers
     """
-    def __init__(self, sink: AttendeeSink):
-        assert isinstance(sink, AttendeeSink), "sink must be an AttendeeSink"
-
+    def __init__(self, sink: Sink):
         super().__init__(sink)
         if gcloud_config_helper.on_path():
-            credentials, project = gcloud_config_helper.default()
+            credentials, _ = gcloud_config_helper.default()
         else:
             logging.info("using application default credentials")
-            credentials, project = google.auth.default()
+            credentials, _ = google.auth.default()
 
-        self.client = firestore.Client(credentials=credentials, project=project)
+        ## the scraper reads directly from the XKE next project
+        self.xke_db = firestore.Client(credentials=credentials, project="xke-nxt")
 
     @property
     def name(self):
@@ -60,6 +56,7 @@ class AttendeeSource(AuthoritySource):
         now = datetime.now().astimezone(pytz.utc)
         events = (
             self.xke_db.collection("events")
+
             .where(
                 "startTime",
                 ">=",
@@ -68,17 +65,12 @@ class AttendeeSource(AuthoritySource):
             .order_by("startTime")
         )
 
-        for event_reference in events.stream():
-            event = event_reference.to_dict()
-            attendees = []
-            if event['endTime'] > datetime(2025, 1, 1, tzinfo=pytz.utc):
-                return
-
+        for event_reference in events.stream(retry=Retry()):
             for session_reference in (
                     self.xke_db.collection("events")
                             .document(event_reference.id)
                             .collection("sessions-public")
-                            .stream()
+                            .stream(retry=Retry())
             ):
                 if session_reference.id.endswith('-protected'):
                     continue
@@ -87,14 +79,14 @@ class AttendeeSource(AuthoritySource):
 
                 for attendee_reference in (
                 self.xke_db.collection("events").document(event_reference.id).collection("sessions-private").document(
-                        session_reference.id).collection("attendees").stream()):
+                        session_reference.id).collection("attendees").stream(retry=Retry())):
                     attendee = attendee_reference.to_dict()
 
                     date = session.get('startTime')
                     if date < now:
                         yield Contribution(
                             guid=f"{event_reference.id}/{session_reference.id}/{attendee_reference.id}",
-                            title=session.get('title'),
+                            title=session.get('title')  ,
                             author=attendee['name'],
                             date=session.get('startTime'),
                             url=f"https://xke.xebia.com/event/{event_reference.id}/{session_reference.id}/{session.get('slug', '')}",
@@ -104,7 +96,11 @@ class AttendeeSource(AuthoritySource):
 
 
 if __name__ == "__main__":
-    from authority.util.test_source import test_json_source
-    from datetime import datetime
+    sink = Sink()
+    source = AttendeeSource(sink)
+    sink.load(source.feed)
 
-    test_json_source(AttendeeSource, datetime.fromisoformat("2024-08-31").astimezone(pytz.utc))
+    # from authority.util.test_source import test_source
+    # from datetime import datetime
+    #
+    # test_source(AttendeeSource, datetime.fromisoformat("2025-07-01").astimezone(pytz.utc))
