@@ -32,13 +32,13 @@ class BlogSource(AuthoritySource):
         self.username = lazy_env(
             key="WP_USERNAME",
             default=lambda: SecretManager().get_secret(
-                "authority-contribution-wordpress-username"
+                "authority-contribution-wp-username"
             ),
         )
         self.password = lazy_env(
             key="WP_PASSWORD",
             default=lambda: SecretManager().get_secret(
-                "authority-contribution-wordpress-password"
+                "authority-contribution-wp-password"
             ),
         )
 
@@ -62,8 +62,8 @@ class BlogSource(AuthoritySource):
     @cache
     def _get_author_by_id(self, author_id:str) -> [str]:
         response = requests.get(
-            url=f"https://xebia.com/wp-json/wp/v2/users/",
-            auth=(self.username, self.password),
+            url=f"https://xebiainnovationproject.kinsta.cloud/wp-json/wp/v2/users/",
+            auth=(self.username, self.password) if self.username else None,
             params={"search": author_id},
             headers={"User-Agent": "curl", "Accept": "application/json"},
             timeout=10,
@@ -79,7 +79,7 @@ class BlogSource(AuthoritySource):
     def _feed(self) -> Generator[Contribution, None, None]:
         latest = self._get_latest_entry()
         logging.info(
-            "reading new blogs from https://xebia.com.com/blog since %s", latest
+            "reading new blogs from https://xebia.com.com/ since %s", latest
         )
         now = datetime.now().astimezone(pytz.utc)
 
@@ -89,7 +89,7 @@ class BlogSource(AuthoritySource):
         after = latest.astimezone(pytz.UTC).replace(tzinfo=None).isoformat()
         while page <= total_pages:
             response = requests.get(
-                url="https://xebia.com/wp-json/wp/v2/posts",
+                url="https://xebiainnovationproject.kinsta.cloud/wp-json/wp/v2/posts",
                 auth=(self.username, self.password),
                 params={
                     "page": page,
