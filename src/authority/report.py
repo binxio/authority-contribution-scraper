@@ -97,7 +97,7 @@ _CONTRIBUTIONS_PER_MONTH = """
                FROM (
                SELECT DATETIME_TRUNC(date, MONTH) AS maand, type, COUNT(DISTINCT guid) AS aantal,
                FROM `binxio-mgmt.authority.contributions` c, `binxio-mgmt.authority.contributors` a 
-               WHERE date BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH) AND date_trunc(CURRENT_DATE(), month) 
+               WHERE date BETWEEN DATE_SUB(date_trunc(CURRENT_DATE(), month), INTERVAL 12 MONTH) AND date_trunc(CURRENT_DATE(), month) 
                AND (c.author = a.author OR c.author = a.`github-handle`)
                AND ('""' = '{units}' or a.unit in ( {units} ))
                GROUP BY maand, type
@@ -116,6 +116,7 @@ _AUTHORS = """
                DATE_SUB(DATE_TRUNC(CURRENT_DATE(), MONTH), INTERVAL 0 MONTH)
                AND (c.author = a.author OR c.author = a.`github-handle`)
                AND ('""' = '{units}' or a.unit in ({units}))
+               AND (c.type != 'attendees')
                GROUP BY c.author
                ORDER BY aantal DESC, author ASC
        """
