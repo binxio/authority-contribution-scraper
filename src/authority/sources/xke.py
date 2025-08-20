@@ -63,7 +63,7 @@ class XkeSource(AuthoritySource):
         else:
             logging.info("using application default credentials")
             credentials, project = google.auth.default()
-        self.xke_db = firestore.Client(credentials=credentials, project=project)
+        self.xke_db = firestore.Client(credentials=credentials, project="xke-nxt")
 
     @property
     def name(self):
