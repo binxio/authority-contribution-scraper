@@ -41,6 +41,7 @@ class BlogSource(AuthoritySource):
                 "authority-contribution-wp-password"
             ),
         )
+        self.wp_type = "posts"
 
     @property
     def name(self) -> str:
@@ -79,7 +80,7 @@ class BlogSource(AuthoritySource):
     def _feed(self) -> Generator[Contribution, None, None]:
         latest = self._get_latest_entry()
         logging.info(
-            "reading new blogs from https://xebia.com.com/ since %s", latest
+            "reading new %s from https://xebia.com/ since %s", self.wp_type, latest
         )
         now = datetime.now().astimezone(pytz.utc)
 
@@ -89,7 +90,7 @@ class BlogSource(AuthoritySource):
         after = latest.astimezone(pytz.UTC).replace(tzinfo=None).isoformat()
         while page <= total_pages:
             response = requests.get(
-                url="https://xebiainnovationproject.kinsta.cloud/wp-json/wp/v2/posts",
+                url=f"https://xebiainnovationproject.kinsta.cloud/wp-json/wp/v2/{self.wp_type}",
                 auth=(self.username, self.password),
                 params={
                     "page": page,
