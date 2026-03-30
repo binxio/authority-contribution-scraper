@@ -96,6 +96,27 @@ class Report:
         print(
               f'Last month, a grand total of {total} contributions where made by ' + ", ".join(authors).replace(" (1)", ""))
 
+    def print_git_repositories(self):
+        QUERY = """
+        SELECT
+          regexp_extract(url, '.*/repos/([^/]*)/.*') org, COUNT(*) `#merges`
+        FROM `authority.contributions`
+        WHERE
+          date
+            BETWEEN DATE_SUB(DATE_TRUNC(CURRENT_DATE(), MONTH), INTERVAL 1 MONTH)
+            AND DATE_SUB(DATE_TRUNC(CURRENT_DATE(), MONTH), INTERVAL 0 MONTH)
+          AND type = 'github-pr' 
+        GROUP BY  org
+        ORDER BY COUNT(*) DESC
+        """
+        job = self.client.query(QUERY)
+        organizations = [f'{row.get("org")}' for row in job.result()]
+        print(
+              "The Github merged pull requests where on the following organizations:", ", ".join(organizations)
+        )
+
+
+
 
 _CONTRIBUTIONS_PER_MONTH = """
                SELECT *
