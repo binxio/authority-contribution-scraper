@@ -62,15 +62,22 @@ class GithubPullRequests(AuthoritySource):
     ) -> tuple[typing.Any, "CaseInsensitiveDict[str]"]:
         self._add_authorization(kwargs)
         while True:
-            response = self.session.get(url, **kwargs)
             try:
+                response = self.session.get(url, **kwargs)
                 response.raise_for_status()
+            except requests.exceptions.ConnectionError as error:
+                wait_time = 10
+                logging.warning("failed to connect to GitHub API: %s", error)
+                logging.info("retry in %s seconds", wait_time)
+                sleep(wait_time)
+                continue
             except requests.exceptions.HTTPError as exception:
                 if response.status_code != 403:
                     raise exception
                 rate_limit = response.headers.get("X-RateLimit-Remaining")
                 if rate_limit != "0":
                     continue
+                self.session = requests.Session()
                 reset_time = response.headers.get("X-RateLimit-Reset")
                 wait_time = int(int(reset_time) - time()) + 1 if reset_time else 0
                 if wait_time == 0:
