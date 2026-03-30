@@ -6,6 +6,7 @@ import os
 import subprocess
 import tempfile
 from io import BytesIO
+from textwrap import dedent
 
 import gcloud_config_helper
 import google
@@ -79,13 +80,17 @@ class Report:
         image.seek(0)
         return image
 
-    def print_authors(self):
+    def print_authors(self, include_author_count: bool=True):
         """
         Queries the BigQuery table and prints out the number of contributions per author
         """
         units = ', '.join(map(lambda x: f'"{x}"', self.units)) if self.units else '""'
         job = self.client.query(_AUTHORS.format(units=units))
-        authors = [f'{row.get("author")} ({row.get("aantal")})' for row in job.result()]
+        if include_author_count:
+            authors = [f'{row.get("author")} ({row.get("aantal")})' for row in job.result()]
+        else:
+            authors = [f'{row.get("author")}' for row in job.result()]
+
         total = sum(map(lambda c: c["aantal"], job.result()))
 
         print(
@@ -122,12 +127,24 @@ _AUTHORS = """
        """
 
 
+_TEAMS_CHANNEL = "https://teams.microsoft.com/l/channel/19%3A9f80d536440e48aaaec3b094badebc87%40thread.tacv2/authority-contributions?groupId=453013b0-12a6-4bd9-a381-19f84a1c5ad8&tenantId=3d4d17ea-1ae4-4705-947e-51369c5a5f79"
+
+def print_post_script():
+    text = f"""
+      If you miss your name on here from blogs, XKEs or GH pull requests, please let us know
+      may be we can fix that. If you have non-scraped authority contributions,
+      please announce it in #authority-contributions on slack or [teams]({_TEAMS_CHANNEL}), as we do a manual scrape there when 
+      making this report.
+    """
+    print("\n\n", " ".join(dedent(text).splitlines()))
+
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="report authority contributions")
     parser.add_argument("--unit", default=[], action='append', help="to report on")
     parser.add_argument("--include-bar-labels", action="store_true", help="include numbers in bars")
+    parser.add_argument("--include-author-count", default=False, action="store_true", help="include the counts per author")
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -141,4 +158,5 @@ if __name__ == "__main__":
         file.write(image_stream.read())
         print(file.name)
         subprocess.run(['/usr/bin/open', file.name])
-    reporter.print_authors()
+    reporter.print_authors(args.include_author_count)
+    print_post_script()
