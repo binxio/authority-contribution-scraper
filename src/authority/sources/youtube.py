@@ -24,7 +24,10 @@ class Channel:
     author: str
     channel_id: str
 
-_channels = [Channel("@martinperez9665", "Martín Pérez Rodríguez", "UC0-IFu7XWoeT-QehlXxNmiw")]
+_channels = [
+    Channel("@martinperez9665", "Martín Pérez Rodríguez", "UC0-IFu7XWoeT-QehlXxNmiw"),
+    Channel("@FokkoatWork", "Fokko Veegens", "UCemYJar_AE5cF_dkCoag02A"),
+]
 
 
 class YoutubeChannel(AuthoritySource):
