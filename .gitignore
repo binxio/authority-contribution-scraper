@@ -112,3 +112,4 @@ ENV/
 terraform.tfstate*
 
 .git/
+github_output.csv

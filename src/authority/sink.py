@@ -49,6 +49,32 @@ class Sink:
         logging.info("table %s already exists.", table.full_table_id)
         return table
 
+    def latest_entries_by_author(self, type: str, scraper_id: str) -> dict[str, datetime]:
+        """
+        Returns the latest contribution date for every author in one query.
+
+        :param str type: The contribution type to filter on
+        :param str scraper_id: The scraper id to filter on
+        :return: Dictionary mapping author name to latest contribution datetime
+        :rtype: :obj:`dict`
+        """
+        query_parameters = [
+            bigquery.ScalarQueryParameter("type", "STRING", type),
+            bigquery.ScalarQueryParameter("scraper_id", "STRING", scraper_id),
+        ]
+        job: QueryJob = self.client.query(
+            query=f"SELECT author, MAX(date) AS latest "
+            f"FROM {self._table_ref} "
+            f"WHERE type = @type AND scraper_id = @scraper_id "
+            f"GROUP BY author",
+            job_config=bigquery.QueryJobConfig(query_parameters=query_parameters),
+        )
+        return {
+            row[0]: row[1].replace(tzinfo=pytz.utc)
+            for row in job.result()
+            if row[1] is not None
+        }
+
     def latest_entry(self, **kwargs) -> datetime:
         """
         returns the latest date of contributions of type `contribution`
