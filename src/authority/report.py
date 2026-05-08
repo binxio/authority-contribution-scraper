@@ -126,6 +126,8 @@ _CONTRIBUTIONS_PER_MONTH = """
                WHERE date BETWEEN DATE_SUB(date_trunc(CURRENT_DATE(), month), INTERVAL 12 MONTH) AND date_trunc(CURRENT_DATE(), month) 
                AND (c.author = a.author OR c.author = a.`github-handle`)
                AND ('""' = '{units}' or a.unit in ( {units} ))
+               AND (c.type != 'github-pr' OR not starts_with(c.url, 'https://github.com/' || a.`github-handle`|| '/'))
+               AND c.type != 'attendees'
                GROUP BY maand, type
                ) 
                PIVOT ( 
@@ -143,6 +145,7 @@ _AUTHORS = """
                AND (c.author = a.author OR c.author = a.`github-handle`)
                AND ('""' = '{units}' or a.unit in ({units}))
                AND (c.type != 'attendees')
+               AND (c.type != 'github-pr' OR not starts_with(c.url, 'https://github.com/'|| a.`github-handle` || '/'))
                GROUP BY c.author
                ORDER BY aantal DESC, author ASC
        """
