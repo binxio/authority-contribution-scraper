@@ -15,7 +15,7 @@ resource "google_cloud_run_service" "authority-contribution-scraper" {
       container_concurrency = 1
       service_account_name  = google_service_account.authority-contribution-scraper.email
       containers {
-        image = "eu.gcr.io/binxio-mgmt/authority-contribution-scraper:1.0.11"
+        image = "eu.gcr.io/binxio-mgmt/authority-contribution-scraper:1.1.0"
         resources {
           limits = {
             cpu    = "2000m"
@@ -57,7 +57,7 @@ resource "google_cloud_scheduler_job" "authority-contribution-scraper" {
   time_zone        = "Europe/Amsterdam"
   attempt_deadline = "1800s"
   region           = "europe-west1"
-  pause            = false
+  paused           = false
 
   http_target {
     http_method = "GET"
