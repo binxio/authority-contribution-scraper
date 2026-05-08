@@ -25,6 +25,7 @@ class Channel:
     channel_id: str
 
 _channels = [
+    Channel("@BeyondCoding", "Patrick Akil", "UCdMz6KKEDW_1Qqas-ya7S6w"),
     Channel("@martinperez9665", "Martín Pérez Rodríguez", "UC0-IFu7XWoeT-QehlXxNmiw"),
     Channel("@FokkoatWork", "Fokko Veegens", "UCemYJar_AE5cF_dkCoag02A"),
 ]
