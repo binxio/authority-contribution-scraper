@@ -53,7 +53,7 @@ resource "google_project_iam_member" "authority-contribution-scraper-run-invoker
 resource "google_cloud_scheduler_job" "authority-contribution-scraper" {
   name             = "authority-contribution-scraper"
   description      = "Authority Contribution scraper"
-  schedule         = "1 * * * *"
+  schedule         = "5 0 * * *"
   time_zone        = "Europe/Amsterdam"
   attempt_deadline = "320s"
   region           = "europe-west1"
