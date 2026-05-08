@@ -14,6 +14,7 @@ resource "google_cloud_run_service" "authority-contribution-scraper" {
     spec {
       container_concurrency = 1
       service_account_name  = google_service_account.authority-contribution-scraper.email
+      timeout_seconds       = 1800
       containers {
         image = "eu.gcr.io/binxio-mgmt/authority-contribution-scraper:1.1.0"
         resources {
