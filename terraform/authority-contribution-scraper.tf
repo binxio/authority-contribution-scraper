@@ -55,8 +55,9 @@ resource "google_cloud_scheduler_job" "authority-contribution-scraper" {
   description      = "Authority Contribution scraper"
   schedule         = "5 0 * * *"
   time_zone        = "Europe/Amsterdam"
-  attempt_deadline = "320s"
+  attempt_deadline = "1800s"
   region           = "europe-west1"
+  pause            = false
 
   http_target {
     http_method = "GET"
