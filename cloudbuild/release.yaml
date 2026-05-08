@@ -1,6 +1,7 @@
 ---
 timeout: 2400s
 options:
+  logging: CLOUD_LOGGING_ONLY
   env:
     - TF_VAR_project=${PROJECT_ID}
 
