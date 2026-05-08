@@ -9,6 +9,9 @@ resource "google_cloudbuild_trigger" "build" {
   }
   ignored_files = ["terraform/**"]
   filename      = "cloudbuild/build.yaml"
+
+  service_account = google_service_account.cloudbuild.id
+
   project       = data.google_project.current.project_id
   provider      = google-beta
 }
@@ -23,6 +26,9 @@ resource "google_cloudbuild_trigger" "release" {
     }
   }
   filename = "cloudbuild/release.yaml"
+
+  service_account = google_service_account.cloudbuild.id
+
   project  = data.google_project.current.project_id
   provider = google-beta
 }
@@ -39,6 +45,8 @@ resource "google_cloudbuild_trigger" "deploy" {
   included_files = ["terraform/**"]
   filename       = "cloudbuild/deploy.yaml"
 
+  service_account = google_service_account.cloudbuild.id
+
   substitutions = {
     _GIT_REPOSITORY_URL = "git@github.com:binxio/authority-contribution-scraper.git"
   }
@@ -47,9 +55,28 @@ resource "google_cloudbuild_trigger" "deploy" {
   provider = google-beta
 }
 
-resource "google_project_iam_member" "cloudbuild-editor" {
-  role       = "roles/owner"
-  member     = "serviceAccount:${data.google_project.current.number}@cloudbuild.gserviceaccount.com"
+
+resource google_service_account cloudbuild {
+  account_id = "cb-authority-cntrbtn-scrpr"
+  description = "CloudBuild - Authority Contribution scraper"
+}
+
+resource "google_project_iam_member" "cloudbuild" {
+  for_each = toset([
+    "roles/run.admin",
+    "roles/cloudscheduler.admin",
+    "roles/bigquery.admin",
+    "roles/secretmanager.admin",
+    "roles/cloudkms.admin",
+    "roles/storage.admin",
+    "roles/serviceusage.serviceUsageAdmin",
+    "roles/resourcemanager.projectIamAdmin",
+    "roles/iam.serviceAccountAdmin",
+    "roles/iam.serviceAccountUser",
+    "roles/cloudbuild.builds.builder",
+  ])
+  role       = each.value
+  member     = google_service_account.cloudbuild.member
   project    = data.google_project.current.project_id
   depends_on = [google_project_service.cloudbuild]
 }
@@ -72,7 +99,7 @@ resource "google_secret_manager_secret" "cloudbuild" {
 
 resource "google_secret_manager_secret_iam_member" "cloudbuild" {
   for_each  = google_secret_manager_secret.cloudbuild
-  member    = format("serviceAccount:%s@cloudbuild.gserviceaccount.com", data.google_project.current.number)
+  member    = google_service_account.cloudbuild.member
   role      = "roles/secretmanager.secretAccessor"
   secret_id = each.value.secret_id
 }
