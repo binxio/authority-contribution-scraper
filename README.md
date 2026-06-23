@@ -36,3 +36,5 @@ make html
 ```
 After that, there'll be a `build` folder located in `docs/src`. Open the `index.html` in 
 `docs/src/build/html` in your favorite browser to view the Python documentation.
+
+For a high-level overview of the project's design, see [DESIGN.md](DESIGN.md).
