@@ -80,7 +80,7 @@ class DinnerRegistrationSynchronizer:
             .replace(hour=0, minute=0, second=0, microsecond=0)
         )
         logging.info(
-            "reading new XKE dinner registration from firestore since %s", since
+            "reading new XKE dinner registration from firestore since %s", latest
         )
         events = (
             self.xke_db.collection("events")

@@ -21,6 +21,7 @@ feedparser = "*"
 flask = "*"
 flask-caching = "*"
 gcloud-config-helper = "*"
+matplotlib = "*"
 google-cloud-bigquery = "*"
 google-cloud-firestore = "*"
 google-cloud-secret-manager = "*"
@@ -33,4 +34,4 @@ stringcase = "*"
 python-youtube = "*"
 
 [requires]
-python_version = "3.12"
+python_version = "3.13"
