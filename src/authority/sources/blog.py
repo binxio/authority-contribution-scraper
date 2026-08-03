@@ -66,7 +66,7 @@ class BlogSource(AuthoritySource):
             url=f"https://xebiainnovationproject.kinsta.cloud/wp-json/wp/v2/users/",
             auth=(self.username, self.password) if self.username else None,
             params={"search": author_id},
-            headers={"User-Agent": "curl", "Accept": "application/json"},
+            headers={"User-Agent": "authority-scraper/1.0.0", "Accept": "application/json"},
             timeout=10,
         )
         if response.status_code == 200:
@@ -100,7 +100,7 @@ class BlogSource(AuthoritySource):
                     "after": after,
                     "_embed": "author",
                 },
-                headers={"User-Agent": "curl", "Accept": "application/json"},
+                headers={"User-Agent": "authority-scraper/1.0.0", "Accept": "application/json"},
                 timeout=10,
             )
             if response.status_code != 200:
